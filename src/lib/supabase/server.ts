@@ -20,7 +20,10 @@ export function createServerSupabase() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cookiesToSet: { name: string; value: string; options?: any }[]
+      ) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options)
