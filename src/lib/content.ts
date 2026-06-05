@@ -131,8 +131,15 @@ export async function writeContent(
     return merged;
   }
 
-  await fs.mkdir(path.dirname(CONTENT_PATH), { recursive: true });
-  await fs.writeFile(CONTENT_PATH, JSON.stringify(merged, null, 2), "utf8");
+  // Persist to the local file when the host is writable. On a read-only host
+  // (e.g. Vercel prototype without Supabase) this no-ops so the admin still
+  // "saves" without erroring — the edit just doesn't survive the session.
+  try {
+    await fs.mkdir(path.dirname(CONTENT_PATH), { recursive: true });
+    await fs.writeFile(CONTENT_PATH, JSON.stringify(merged, null, 2), "utf8");
+  } catch {
+    /* read-only host — ephemeral prototype mode */
+  }
   return merged;
 }
 

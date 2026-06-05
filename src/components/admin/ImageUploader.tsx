@@ -49,6 +49,7 @@ export default function ImageUploader({
             alt="Preview"
             fill
             sizes="200px"
+            unoptimized={value.startsWith("data:")}
             className="object-contain p-2"
           />
         )}

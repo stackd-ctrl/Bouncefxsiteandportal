@@ -124,13 +124,6 @@ export default function AdminDashboard({
 
   return (
     <div>
-      {demo && (
-        <p className="mb-6 rounded-lg border border-party-yellow/50 bg-party-yellow/25 px-4 py-3 font-semibold">
-          Preview mode — showing sample bookings. Connect Supabase to manage
-          real data.
-        </p>
-      )}
-
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[

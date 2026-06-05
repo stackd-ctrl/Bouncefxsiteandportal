@@ -77,6 +77,13 @@ export default function AdminPortal({
       </header>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        {demo && (
+          <p className="mb-6 rounded-lg border border-party-yellow/60 bg-party-yellow/25 px-4 py-3 text-sm font-semibold">
+            Prototype mode — explore freely! You can edit and upload, but changes
+            are session-only and won't be saved (connect Supabase to make edits
+            stick). Bookings shown are sample data.
+          </p>
+        )}
         {tab === "bookings" && (
           <AdminDashboard
             bookings={bookings}

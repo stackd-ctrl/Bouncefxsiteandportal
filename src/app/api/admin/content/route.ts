@@ -5,11 +5,16 @@ import { writeContent } from "@/lib/content";
 
 export const runtime = "nodejs";
 
-/** Only allow empty, relative ("/…"), or http(s) URLs — blocks javascript:/data:. */
+/**
+ * Allow empty, relative ("/…"), http(s), or inline image data URLs only.
+ * Blocks javascript:/data:text/html etc. (stored-XSS). `data:image/*` is safe
+ * in an <img> context and is used by the read-only-host prototype upload path.
+ */
 function isSafeUrl(v: unknown): boolean {
   if (typeof v !== "string" || v.trim() === "") return true;
   const s = v.trim();
   if (s.startsWith("/")) return true;
+  if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(s)) return true;
   try {
     const u = new URL(s);
     return u.protocol === "http:" || u.protocol === "https:";

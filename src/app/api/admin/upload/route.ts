@@ -59,18 +59,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: pub.publicUrl });
     }
 
-    // Local file fallback.
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(path.join(dir, fileName), buffer);
-    return NextResponse.json({ url: `/uploads/${fileName}` });
+    // Local file write (persists on a writable host).
+    try {
+      const dir = path.join(process.cwd(), "public", "uploads");
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(path.join(dir, fileName), buffer);
+      return NextResponse.json({ url: `/uploads/${fileName}` });
+    } catch {
+      // Read-only host (e.g. Vercel) without Supabase → return an inline data
+      // URL so the prototype upload still "works" for the session (ephemeral).
+      const dataUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
+      return NextResponse.json({ url: dataUrl, ephemeral: true });
+    }
   } catch {
-    return NextResponse.json(
-      {
-        error:
-          "Upload failed. On read-only hosting (e.g. Vercel) connect Supabase Storage.",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Upload failed." }, { status: 500 });
   }
 }

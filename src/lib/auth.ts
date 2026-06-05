@@ -17,9 +17,16 @@ export interface AdminSession {
  *   A missing ADMIN_EMAIL is treated as deny-all (never allow-any).
  */
 export async function getAdminSession(): Promise<AdminSession> {
+  // Prototype mode: ADMIN_DEMO=1 opens the admin on any host (even with Supabase
+  // connected) so a client can click around without logging in. Edits are
+  // ephemeral unless Supabase is also configured. Never set this for a live site
+  // with real customer data.
+  if (process.env.ADMIN_DEMO === "1") {
+    return { authed: true, email: null, demo: true };
+  }
   if (!supabaseConfigured) {
-    const demoAllowed =
-      process.env.NODE_ENV !== "production" || process.env.ADMIN_DEMO === "1";
+    // Open in local dev for convenience; locked in production by default.
+    const demoAllowed = process.env.NODE_ENV !== "production";
     return { authed: demoAllowed, email: null, demo: demoAllowed };
   }
   try {
