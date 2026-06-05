@@ -69,18 +69,16 @@ drop policy if exists "public read bundles" on public.bundles;
 create policy "public read bundles" on public.bundles
   for select using (true);
 
--- Bookings are written by the server (service role bypasses RLS).
--- Authenticated owner can read all bookings for the admin dashboard.
+-- Bookings hold customer PII. They are read/written exclusively by the server
+-- using the SUPABASE_SERVICE_ROLE_KEY (which bypasses RLS) — see
+-- src/lib/bookings.ts and the admin/webhook routes. We therefore grant NO
+-- anon/authenticated policies on bookings: with RLS enabled and no policy, the
+-- public anon/authenticated keys can neither read nor write rows. This avoids
+-- exposing every customer's name/email/phone/address to any signed-in user.
 drop policy if exists "authenticated read bookings" on public.bookings;
-create policy "authenticated read bookings" on public.bookings
-  for select to authenticated using (true);
-
 drop policy if exists "authenticated update bookings" on public.bookings;
-create policy "authenticated update bookings" on public.bookings
-  for update to authenticated using (true) with check (true);
-
--- NOTE: Inserts/updates from the app use the SUPABASE_SERVICE_ROLE_KEY on the
--- server, which bypasses RLS. No public insert policy is granted on purpose.
+-- (If you ever need client-side access, add an admin_users table and scope
+--  policies with auth.uid()/email instead of a blanket `using (true)`.)
 
 -- ============================================================
 --  Admin content store (powers the mini admin portal / CMS)

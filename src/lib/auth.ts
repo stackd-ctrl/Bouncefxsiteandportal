@@ -8,13 +8,19 @@ export interface AdminSession {
 }
 
 /**
- * Resolve the current admin session. In demo mode (no Supabase) we treat the
- * dashboard as open so the owner can preview it. With Supabase configured,
- * only a logged-in user whose email matches ADMIN_EMAIL is allowed.
+ * Resolve the current admin session.
+ *
+ * - Without Supabase: demo/preview mode is open ONLY in local dev (or when
+ *   ADMIN_DEMO=1 is explicitly set). In production this fails closed so the
+ *   admin can never be reached unauthenticated by accident.
+ * - With Supabase: a logged-in user whose email matches ADMIN_EMAIL is allowed.
+ *   A missing ADMIN_EMAIL is treated as deny-all (never allow-any).
  */
 export async function getAdminSession(): Promise<AdminSession> {
   if (!supabaseConfigured) {
-    return { authed: true, email: null, demo: true };
+    const demoAllowed =
+      process.env.NODE_ENV !== "production" || process.env.ADMIN_DEMO === "1";
+    return { authed: demoAllowed, email: null, demo: demoAllowed };
   }
   try {
     const supabase = createServerSupabase();
@@ -23,9 +29,8 @@ export async function getAdminSession(): Promise<AdminSession> {
     } = await supabase.auth.getUser();
     const allowed = process.env.ADMIN_EMAIL?.toLowerCase();
     const email = user?.email?.toLowerCase() ?? null;
-    const authed = Boolean(
-      email && (!allowed || email === allowed)
-    );
+    // Deny-all when ADMIN_EMAIL is unset — never fall open to any logged-in user.
+    const authed = Boolean(allowed && email && email === allowed);
     return { authed, email: user?.email ?? null, demo: false };
   } catch {
     return { authed: false, email: null, demo: false };
