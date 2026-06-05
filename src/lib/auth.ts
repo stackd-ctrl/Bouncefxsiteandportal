@@ -17,29 +17,28 @@ export interface AdminSession {
  *   A missing ADMIN_EMAIL is treated as deny-all (never allow-any).
  */
 export async function getAdminSession(): Promise<AdminSession> {
-  // Prototype mode: ADMIN_DEMO=1 opens the admin on any host (even with Supabase
-  // connected) so a client can click around without logging in. Edits are
-  // ephemeral unless Supabase is also configured. Never set this for a live site
-  // with real customer data.
-  if (process.env.ADMIN_DEMO === "1") {
-    return { authed: true, email: null, demo: true };
+  // When Supabase IS configured there is (potentially) real customer data, so we
+  // ALWAYS require an authenticated owner — an env var alone can never bypass it.
+  if (supabaseConfigured) {
+    try {
+      const supabase = createServerSupabase();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const allowed = process.env.ADMIN_EMAIL?.toLowerCase();
+      const email = user?.email?.toLowerCase() ?? null;
+      // Deny-all when ADMIN_EMAIL is unset — never fall open to any logged-in user.
+      const authed = Boolean(allowed && email && email === allowed);
+      return { authed, email: user?.email ?? null, demo: false };
+    } catch {
+      return { authed: false, email: null, demo: false };
+    }
   }
-  if (!supabaseConfigured) {
-    // Open in local dev for convenience; locked in production by default.
-    const demoAllowed = process.env.NODE_ENV !== "production";
-    return { authed: demoAllowed, email: null, demo: demoAllowed };
-  }
-  try {
-    const supabase = createServerSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const allowed = process.env.ADMIN_EMAIL?.toLowerCase();
-    const email = user?.email?.toLowerCase() ?? null;
-    // Deny-all when ADMIN_EMAIL is unset — never fall open to any logged-in user.
-    const authed = Boolean(allowed && email && email === allowed);
-    return { authed, email: user?.email ?? null, demo: false };
-  } catch {
-    return { authed: false, email: null, demo: false };
-  }
+
+  // No Supabase = no real data (bookings are sample, edits are ephemeral). Open
+  // the admin in local dev, or on a hosted prototype when ADMIN_DEMO=1 is set.
+  // Locked by default in production so a stray deploy isn't left wide open.
+  const demoAllowed =
+    process.env.NODE_ENV !== "production" || process.env.ADMIN_DEMO === "1";
+  return { authed: demoAllowed, email: null, demo: demoAllowed };
 }
