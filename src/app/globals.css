@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #191919;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #fff6e0;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Editorial italic serif display headings */
+@layer components {
+  .display {
+    @apply font-display font-bold italic tracking-tight;
+  }
+  .section-title {
+    @apply font-display text-4xl font-bold italic leading-[1.05] tracking-tight sm:text-5xl;
+  }
+  .eyebrow {
+    @apply font-body text-xs font-bold uppercase tracking-[0.22em];
+  }
+
+  /* Buttons — grown-up rounded-rectangle by default.
+     Add `.btn-pill` for the softer bubble shape used on product/bundle cards. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3
+      font-body text-base font-semibold transition-colors duration-200;
+  }
+  .btn-pill {
+    @apply !rounded-full;
+  }
+  .btn-red {
+    @apply btn bg-party-red text-white hover:bg-[#c5371d];
+  }
+  .btn-dark {
+    @apply btn bg-party-ink text-white hover:bg-black;
+  }
+  .btn-white {
+    @apply btn bg-white text-party-ink hover:bg-party-cream;
+  }
+  .btn-yellow {
+    @apply btn bg-party-yellow text-party-ink hover:bg-[#f5cf2e];
+  }
+  .btn-blue {
+    @apply btn bg-party-blue text-white hover:bg-[#1f5cc0];
+  }
+  .btn-green {
+    @apply btn bg-party-green text-white hover:bg-[#2f9440];
+  }
+  .btn-outline {
+    @apply btn border-2 border-party-ink bg-transparent text-party-ink hover:bg-party-ink hover:text-white;
+  }
+
+  /* Cards — soft, modern, no hard brutalist borders */
+  .card {
+    @apply rounded-2xl bg-white shadow-card;
+  }
+
+  /* Small label chip */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-party-ink/20
+      px-4 py-1.5 font-body text-sm font-semibold;
+  }
+
+  /* Filter tabs — professional, not bubbles */
+  .tab {
+    @apply border-b-2 border-transparent pb-2 font-body text-sm font-semibold
+      text-party-ink/55 transition-colors hover:text-party-ink;
+  }
+  .tab-active {
+    @apply border-party-red text-party-ink;
+  }
+
+  /* Form fields — slim, not bulky */
+  .field {
+    @apply w-full rounded-lg border border-party-ink/25 bg-white px-4 py-2.5
+      font-body text-base text-party-ink outline-none transition-colors
+      placeholder:text-party-ink/35 focus:border-party-red;
+  }
+  .field-label {
+    @apply mb-1.5 block font-body text-xs font-bold uppercase tracking-wider text-party-ink/70;
+  }
+}
+
+/* Reveal-on-scroll (no animation library) */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Thin underline accordion rows (services list) */
+.rule-row {
+  @apply flex items-center justify-between gap-4 border-b border-party-ink/25 py-4
+    font-display text-xl font-semibold italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-marquee,
+  .animate-marquee-fast,
+  .animate-marquee-rev,
+  .animate-float-slow,
+  .animate-float-mid {
+    animation: none !important;
+  }
+}
