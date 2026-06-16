@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getBundles } from "@/lib/catalog";
+import { getPages } from "@/lib/content";
 import BundleCard from "@/components/BundleCard";
 import PageHeader from "@/components/PageHeader";
 import DeliveryCalculator from "@/components/DeliveryCalculator";
@@ -43,25 +44,6 @@ const ADDONS = [
   ["Swap the bounce house", "Pick any inflatable in our lineup", "From $275 / day"],
 ];
 
-const FAQ = [
-  [
-    "Can I customize a bundle?",
-    "Absolutely. Every bundle is a starting point — add chairs, tables, an extra tent, or swap the inflatable. Just tell us what you need and we'll build it.",
-  ],
-  [
-    "What does the deposit cover?",
-    "A 50% deposit confirms your date and reserves your equipment. The remaining balance is due on the day of your event.",
-  ],
-  [
-    "Is delivery really included?",
-    "Yes — delivery, setup, and pickup are included on every bundle within 15 miles of Fredericksburg (22401). Beyond that it's a flat $2/mile.",
-  ],
-  [
-    "How far ahead should I book?",
-    "Popular dates fill up fast, especially weekends in spring and summer. We recommend booking 2–3 weeks out, but we'll always do our best for last-minute events.",
-  ],
-];
-
 function CellValue({ value }: { value: Cell }) {
   if (value === true)
     return <span className="font-bold text-party-green">Included</span>;
@@ -71,14 +53,17 @@ function CellValue({ value }: { value: Cell }) {
 }
 
 export default async function BundlesPage() {
-  const bundles = await getBundles();
+  const [bundles, c] = await Promise.all([
+    getBundles(),
+    getPages().then((p) => p.bundles),
+  ]);
 
   return (
     <>
       <PageHeader
-        eyebrow="Bundle & save"
-        title="Bundle Packages"
-        subtitle="One package, everything you need. Pick a tier and we'll bring the whole setup — seating, shade, and bounce."
+        eyebrow={c.headerEyebrow}
+        title={c.headerTitle}
+        subtitle={c.headerSubtitle}
         color="bg-party-yellow"
         text="text-party-ink"
       />
@@ -261,10 +246,12 @@ export default async function BundlesPage() {
             <h2 className="section-title mt-3">Bundle FAQ</h2>
           </div>
           <div className="mt-10 grid gap-x-12 gap-y-8 md:grid-cols-2">
-            {FAQ.map(([q, a]) => (
-              <div key={q} className="reveal">
-                <h3 className="font-display text-xl font-bold italic">{q}</h3>
-                <p className="mt-2 text-party-ink/70">{a}</p>
+            {c.faq.map((f) => (
+              <div key={f.title} className="reveal">
+                <h3 className="font-display text-xl font-bold italic">
+                  {f.title}
+                </h3>
+                <p className="mt-2 text-party-ink/70">{f.desc}</p>
               </div>
             ))}
           </div>

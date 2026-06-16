@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getProducts } from "@/lib/catalog";
+import { getPages } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import PartyBuilder from "@/components/PartyBuilder";
 import SpaceChecker from "@/components/SpaceChecker";
@@ -11,14 +12,17 @@ export const metadata: Metadata = {
 };
 
 export default async function BuildPage() {
-  const products = await getProducts();
+  const [products, c] = await Promise.all([
+    getProducts(),
+    getPages().then((p) => p.build),
+  ]);
 
   return (
     <>
       <PageHeader
-        eyebrow="Plan it in seconds"
-        title="Build Your Party"
-        subtitle="Move the slider, pick your occasion, and we'll recommend the perfect setup with a live estimate. Then book it in one click."
+        eyebrow={c.eyebrow}
+        title={c.title}
+        subtitle={c.subtitle}
         color="bg-party-yellow"
         text="text-party-ink"
       />

@@ -63,6 +63,7 @@ export async function POST(req: Request) {
       bundles: body.bundles,
       site: body.site,
       media: body.media,
+      pages: body.pages,
     });
     // Refresh the whole site so edits show everywhere.
     revalidatePath("/", "layout");

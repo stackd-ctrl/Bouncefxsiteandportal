@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { REVIEWS } from "@/lib/data";
 import { prettyDate } from "@/lib/format";
+import { getPages } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import ReviewForm from "@/components/ReviewForm";
 import InstagramStrip from "@/components/InstagramStrip";
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
     "See what families across Fredericksburg and the DMV say about Bounce FX Party Rentals — and leave your own review.",
 };
 
-export default function ReviewsPage() {
+export default async function ReviewsPage() {
+  const c = (await getPages()).reviews;
   const avg =
     REVIEWS.reduce((s, r) => s + r.rating, 0) / Math.max(REVIEWS.length, 1);
 
@@ -20,7 +22,7 @@ export default function ReviewsPage() {
       <PageHeader
         eyebrow={`${avg.toFixed(1)} / 5 · ${REVIEWS.length}+ happy hosts`}
         title="Reviews"
-        subtitle="Real words from real Bounce FX parties across the DMV."
+        subtitle={c.subtitle}
         color="bg-party-yellow"
         text="text-party-ink"
       />

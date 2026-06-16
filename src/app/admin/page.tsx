@@ -31,6 +31,7 @@ export default async function AdminPage() {
       bundles={bundles}
       site={content.site}
       media={content.media}
+      pages={content.pages}
       demo={session.demo}
       email={session.email}
     />

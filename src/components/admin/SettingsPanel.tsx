@@ -21,7 +21,17 @@ export default function SettingsPanel({ site }: { site: SiteInfo }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          site: { ...draft, phones: draft.phones.filter(Boolean) },
+          // Only the business-info fields this tab owns. Page headlines on
+          // `site` (hero/about) are edited from the Pages tab, so leaving them
+          // out keeps the two tabs from overwriting each other.
+          site: {
+            phones: draft.phones.filter(Boolean),
+            email: draft.email,
+            instagram: draft.instagram,
+            facebook: draft.facebook,
+            tagline: draft.tagline,
+            areaText: draft.areaText,
+          },
         }),
       });
       if (!res.ok) throw new Error();
@@ -36,8 +46,9 @@ export default function SettingsPanel({ site }: { site: SiteInfo }) {
   return (
     <div className="max-w-2xl space-y-5">
       <p className="text-sm text-party-ink/60">
-        Update the business info shown across the site (footer, contact page,
-        and search listings).
+        Your business contact details — shown in the footer, on the contact
+        page, and in search listings. To edit the words on a specific page, use
+        the <span className="font-semibold">Pages</span> tab.
       </p>
 
       <div className="rounded-2xl bg-white p-6 shadow-soft">
@@ -107,57 +118,6 @@ export default function SettingsPanel({ site }: { site: SiteInfo }) {
             className="field"
             value={draft.areaText}
             onChange={(e) => update({ areaText: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-white p-6 shadow-soft">
-        <h3 className="font-display text-lg font-bold italic">
-          Homepage &amp; About text
-        </h3>
-        <p className="mb-4 text-sm text-party-ink/55">
-          Use a blank line to start a new paragraph. The headline can use a line
-          break for two lines.
-        </p>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="field-label">Homepage headline</label>
-            <textarea
-              rows={2}
-              className="field resize-none"
-              value={draft.heroHeadline}
-              onChange={(e) => update({ heroHeadline: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="field-label">About headline</label>
-            <textarea
-              rows={2}
-              className="field resize-none"
-              value={draft.aboutHeadline}
-              onChange={(e) => update({ aboutHeadline: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label className="field-label">Homepage subheading</label>
-          <textarea
-            rows={3}
-            className="field resize-none"
-            value={draft.heroSub}
-            onChange={(e) => update({ heroSub: e.target.value })}
-          />
-        </div>
-
-        <div className="mt-4">
-          <label className="field-label">About intro text</label>
-          <textarea
-            rows={5}
-            className="field resize-none"
-            value={draft.aboutBody}
-            onChange={(e) => update({ aboutBody: e.target.value })}
           />
         </div>
       </div>

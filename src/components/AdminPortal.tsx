@@ -3,20 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Booking, Product, Bundle } from "@/lib/types";
-import type { SiteInfo, MediaInfo } from "@/lib/content";
+import type { SiteInfo, MediaInfo, PagesContent } from "@/lib/content";
 import AdminDashboard from "./AdminDashboard";
 import ProductsPanel from "./admin/ProductsPanel";
 import BundlesPanel from "./admin/BundlesPanel";
 import MediaPanel from "./admin/MediaPanel";
+import PagesPanel from "./admin/PagesPanel";
 import SettingsPanel from "./admin/SettingsPanel";
 
-type Tab = "bookings" | "products" | "bundles" | "media" | "settings";
+type Tab = "bookings" | "products" | "bundles" | "media" | "pages" | "settings";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "bookings", label: "Bookings" },
   { key: "products", label: "Products" },
   { key: "bundles", label: "Bundles" },
   { key: "media", label: "Media" },
+  { key: "pages", label: "Pages" },
   { key: "settings", label: "Settings" },
 ];
 
@@ -26,6 +28,7 @@ export default function AdminPortal({
   bundles,
   site,
   media,
+  pages,
   demo,
   email,
 }: {
@@ -34,6 +37,7 @@ export default function AdminPortal({
   bundles: Bundle[];
   site: SiteInfo;
   media: MediaInfo;
+  pages: PagesContent;
   demo: boolean;
   email: string | null;
 }) {
@@ -95,6 +99,7 @@ export default function AdminPortal({
         {tab === "products" && <ProductsPanel products={products} />}
         {tab === "bundles" && <BundlesPanel bundles={bundles} />}
         {tab === "media" && <MediaPanel media={media} />}
+        {tab === "pages" && <PagesPanel pages={pages} site={site} />}
         {tab === "settings" && <SettingsPanel site={site} />}
       </div>
     </div>

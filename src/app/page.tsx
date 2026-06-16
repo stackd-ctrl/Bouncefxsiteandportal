@@ -17,7 +17,8 @@ export default async function HomePage() {
     getBundles(),
     readContent(),
   ]);
-  const { media, site } = content;
+  const { media, site, pages } = content;
+  const c = pages.home;
   const featured = products.slice(0, 6);
 
   return (
@@ -64,8 +65,8 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
           <div className="reveal flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="eyebrow text-party-red">The lineup</p>
-              <h2 className="section-title mt-3">All about the fun</h2>
+              <p className="eyebrow text-party-red">{c.featuredEyebrow}</p>
+              <h2 className="section-title mt-3">{c.featuredTitle}</h2>
             </div>
             <Link href="/shop" className="btn-dark">
               View All Rentals
@@ -82,40 +83,24 @@ export default async function HomePage() {
       <section className="bg-party-yellow text-party-ink">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Easy as 1 · 2 · 3</p>
-            <h2 className="section-title mt-3">How the magic happens</h2>
+            <p className="eyebrow text-party-red">{c.howEyebrow}</p>
+            <h2 className="section-title mt-3">{c.howTitle}</h2>
           </div>
 
           <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {[
-              {
-                n: "01",
-                t: "Browse & pick your date",
-                d: "Explore our rentals and choose the perfect items. Check live availability for your event date.",
-              },
-              {
-                n: "02",
-                t: "Pay your deposit",
-                d: "Lock in your booking with a simple 50% deposit online. The balance is due on the day of your event.",
-              },
-              {
-                n: "03",
-                t: "We deliver & set up",
-                d: "Sit back and relax. We deliver, set up, and pick everything back up — clean, safe, and stress-free.",
-              },
-            ].map((s, i) => (
+            {c.howSteps.map((s, i) => (
               <div
-                key={s.n}
+                key={i}
                 className="reveal border-t-2 border-party-ink pt-5"
                 style={{ transitionDelay: `${i * 90}ms` }}
               >
                 <span className="font-display text-5xl font-bold italic text-party-red">
-                  {s.n}
+                  {String(i + 1).padStart(2, "0")}
                 </span>
                 <h3 className="mt-3 font-display text-2xl font-bold italic">
-                  {s.t}
+                  {s.title}
                 </h3>
-                <p className="mt-2 text-party-ink/70">{s.d}</p>
+                <p className="mt-2 text-party-ink/70">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -126,11 +111,9 @@ export default async function HomePage() {
       <section className="bg-party-cream">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Bundle &amp; save</p>
-            <h2 className="section-title mt-3">Everything in one package</h2>
-            <p className="mt-4 text-lg text-party-ink/70">
-              Seating, shade, and bounce — bundled together for one easy price.
-            </p>
+            <p className="eyebrow text-party-red">{c.bundlesEyebrow}</p>
+            <h2 className="section-title mt-3">{c.bundlesTitle}</h2>
+            <p className="mt-4 text-lg text-party-ink/70">{c.bundlesSub}</p>
           </div>
           <div className="mt-14 grid gap-7 lg:grid-cols-3">
             {bundles.map((b) => (
@@ -146,17 +129,12 @@ export default async function HomePage() {
       <section className="bg-party-ink text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { t: "Folding Chairs", d: "Crisp & heavy-duty" },
-              { t: "Folding Tables", d: "6ft banquet tables" },
-              { t: "Inflatables", d: "Slides & bounce houses" },
-              { t: "Same-Day Delivery", d: "Order by noon" },
-            ].map((s) => (
-              <div key={s.t} className="px-2 py-4 text-center sm:py-6">
+            {c.servicesStrip.map((s, i) => (
+              <div key={i} className="px-2 py-4 text-center sm:py-6">
                 <h3 className="font-display text-2xl font-bold italic text-party-yellow">
-                  {s.t}
+                  {s.title}
                 </h3>
-                <p className="mt-1 text-sm text-white/60">{s.d}</p>
+                <p className="mt-1 text-sm text-white/60">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -169,8 +147,8 @@ export default async function HomePage() {
       <section className="bg-party-cream">
         <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 md:pb-28">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Real parties</p>
-            <h2 className="section-title mt-3">Moments we made</h2>
+            <p className="eyebrow text-party-red">{c.galleryEyebrow}</p>
+            <h2 className="section-title mt-3">{c.galleryTitle}</h2>
           </div>
           <div className="mt-10">
             <Gallery images={media.gallery} />
@@ -182,8 +160,8 @@ export default async function HomePage() {
       <section className="bg-party-yellow text-party-ink">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Happy hosts</p>
-            <h2 className="section-title mt-3">What families say</h2>
+            <p className="eyebrow text-party-red">{c.testimonialsEyebrow}</p>
+            <h2 className="section-title mt-3">{c.testimonialsTitle}</h2>
           </div>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
             {TESTIMONIALS.map((t, i) => (
@@ -219,22 +197,15 @@ export default async function HomePage() {
       <section className="bg-party-red text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-2">
           <div className="reveal">
-            <p className="eyebrow text-white/80">Delivery</p>
-            <h2 className="section-title mt-3">Serving the DMV</h2>
+            <p className="eyebrow text-white/80">{c.deliveryEyebrow}</p>
+            <h2 className="section-title mt-3">{c.deliveryTitle}</h2>
             <p className="mt-5 max-w-md text-lg text-white/90">
-              Based in Fredericksburg, VA and delivering throughout the
-              surrounding DMV. Setup and pickup are always included — we do the
-              heavy lifting so you can enjoy the party.
+              {c.deliveryBody}
             </p>
             <ul className="mt-7 space-y-0">
-              {[
-                "Free delivery within 15 miles of 22401",
-                "$2.00 / mile beyond the free zone",
-                "Same-day delivery available — order by noon",
-                "Schools, churches, businesses & community events",
-              ].map((t) => (
+              {c.deliveryBullets.map((t, i) => (
                 <li
-                  key={t}
+                  key={i}
                   className="border-b border-white/25 py-4 font-display text-lg font-semibold italic"
                 >
                   {t}
@@ -261,10 +232,10 @@ export default async function HomePage() {
             />
           </div>
           <h2 className="font-display text-4xl font-bold italic leading-tight sm:text-6xl">
-            Ready to book your party?
+            {c.ctaTitle}
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-white/80">
-            Check availability for your date and place your order in minutes.
+            {c.ctaSub}
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="/availability" className="btn-yellow">

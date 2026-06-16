@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
-import { getSiteInfo } from "@/lib/content";
+import { readContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const site = await getSiteInfo();
+  const { site, pages } = await readContent();
+  const c = pages.contact;
   const EMAIL = site.email;
   const PHONES = site.phones;
   const IG = site.instagram;
@@ -17,21 +18,16 @@ export default async function ContactPage() {
   return (
     <section className="bg-party-red text-white">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
-        <p className="eyebrow text-white/80">Please contact for availability</p>
+        <p className="eyebrow text-white/80">{c.eyebrow}</p>
         <div className="mt-6 grid gap-12 lg:grid-cols-[1fr_1.1fr]">
           {/* Left — pitch + info */}
           <div>
-            <h1 className="font-display text-6xl font-bold italic leading-[0.95] sm:text-7xl">
-              Let's Get This
-              <br />
-              Party Started!
+            <h1 className="whitespace-pre-line font-display text-6xl font-bold italic leading-[0.95] sm:text-7xl">
+              {c.headline}
             </h1>
-            <p className="mt-6 max-w-md text-lg text-white/90">
-              Fill out the quick form, share your celebration dreams, and we'll
-              whip up fun ideas that make your event a total yay!
-            </p>
+            <p className="mt-6 max-w-md text-lg text-white/90">{c.intro}</p>
             <p className="mt-4 font-display text-lg font-semibold italic text-party-yellow">
-              Ask about our military discounts.
+              {c.militaryNote}
             </p>
 
             <div className="mt-8 space-y-1">
@@ -67,9 +63,7 @@ export default async function ContactPage() {
               <p className="font-display text-lg font-semibold italic">
                 Delivery
               </p>
-              <p className="text-white/90">
-                Free within 15 miles of Fredericksburg 22401 · $2/mile beyond.
-              </p>
+              <p className="text-white/90">{c.deliveryNote}</p>
             </div>
 
             <div className="mt-6">
@@ -94,9 +88,7 @@ export default async function ContactPage() {
                   Facebook
                 </a>
               </div>
-              <p className="mt-3 text-sm text-white/70">
-                We typically respond within 24 hours.
-              </p>
+              <p className="mt-3 text-sm text-white/70">{c.respondNote}</p>
             </div>
           </div>
 
@@ -113,28 +105,21 @@ export default async function ContactPage() {
           <div className="grid items-center gap-8 lg:grid-cols-[1.3fr_1fr]">
             <div>
               <h2 className="font-display text-3xl font-bold italic leading-tight sm:text-4xl">
-                Prefer to plan it together? We've got you.
+                {c.bannerTitle}
               </h2>
-              <p className="mt-3 max-w-xl text-party-ink/70">
-                Tell us your date and we'll handle delivery, setup, and pickup —
-                so all you have to do is show up and celebrate.
-              </p>
+              <p className="mt-3 max-w-xl text-party-ink/70">{c.bannerBody}</p>
             </div>
             <div className="grid grid-cols-3 gap-4 text-center">
-              {[
-                ["24 hrs", "Avg. reply time"],
-                ["Free", "Local delivery"],
-                ["Included", "Setup & pickup"],
-              ].map(([big, small]) => (
+              {c.stats.map((s) => (
                 <div
-                  key={small}
+                  key={s.small}
                   className="rounded-xl border border-party-ink/15 bg-white/60 px-3 py-5"
                 >
                   <div className="font-display text-2xl font-bold italic text-party-red sm:text-3xl">
-                    {big}
+                    {s.big}
                   </div>
                   <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-party-ink/60">
-                    {small}
+                    {s.small}
                   </div>
                 </div>
               ))}
