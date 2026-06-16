@@ -18,7 +18,7 @@ that fall outside the original build (potential change-order / add-on work).
 
 | # | Request | Size | Scope | Status | Notes |
 |---|---------|------|-------|--------|-------|
-| 1 | Stand up backend: Supabase, Resend, update domains in Vercel | L | **Add-on** | Backlog | Foundational infra. Enables persistence, emails, live admin saves. Biggest-ticket item. |
+| 1 | Stand up backend: Supabase, Resend, update domains in Vercel | L | Build | Backlog | **In scope** — required to deploy the site with a working admin portal (persistence, emails, live admin saves). Not an add-on. Biggest-effort Build item. |
 | 2 | Documents page — agreements, privacy, terms | M | Watch | Backlog | New page + legal copy (client to supply text). Mostly content + routing. |
 | 3 | Add measurements & specs to products | S | Build | Backlog | Data/content per product; surface on product cards/pages. |
 | 4 | Add more blog articles | S–M | Build | Backlog | Content volume depends on # of articles client supplies. |
@@ -44,11 +44,16 @@ that fall outside the original build (potential change-order / add-on work).
 
 ### Scope summary (Batch 1)
 
-- **Build (in fixed price):** #3, #4, #7, #8, #9, #10, #11, #12, #13, #17, #18, #20, #21
+- **Build (in fixed price):** #1, #3, #4, #7, #8, #9, #10, #11, #12, #13, #17, #18, #20, #21
 - **Watch (track effort, confirm before expanding):** #2, #6, #14, #15, #19
-- **Add-on (flag as separate scope / billing):** #1, #5, #16
+- **Add-on (flag as separate scope / billing):** #5, #16
 
-**Dependencies worth noting:** #1 (Supabase/Resend) unblocks #6 (notifications), #15 (auth), and #19 (admin CRUD). Recommend sequencing #1 first if those proceed. #16 (Stripe) and #13 (deposit) should ship together.
+**Backend is in scope (#1):** Supabase + Resend + Vercel domains are required to
+deploy the site with the admin portal — treated as core Build, not add-on.
+
+**Dependencies worth noting:** #1 (Supabase/Resend) is the foundation — it unblocks
+#6 (notifications), #15 (admin auth/lock), and #19 (admin CRUD persistence). Build
+#1 first. #16 (Stripe) and #13 ($50 deposit) should ship together.
 
 > Keep adding new client requests below with the date received. Re-tally the
 > scope summary whenever a new batch lands so total fixed-price exposure stays visible.
