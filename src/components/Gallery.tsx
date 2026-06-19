@@ -32,32 +32,26 @@ export default function Gallery({ images }: { images: string[] }) {
 
   return (
     <>
+      {/* Uniform square tiles auto-fill the row, so the grid stays gap-free no
+          matter how many photos the owner adds (1, 5, 9…). */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {images.map((src, i) => (
           <button
             key={i}
             onClick={() => setOpen(i)}
-            className={`reveal group relative overflow-hidden rounded-2xl bg-white shadow-soft ${
-              i % 5 === 0 ? "row-span-2" : ""
-            }`}
+            className="reveal group relative aspect-square overflow-hidden rounded-2xl bg-white shadow-soft"
             aria-label="Open photo"
           >
-            <div
-              className={`relative ${
-                i % 5 === 0 ? "aspect-[3/4]" : "aspect-square"
-              }`}
-            >
-              <Image
-                src={src}
-                alt={`Bounce FX event photo ${i + 1}`}
-                fill
-                sizes="(max-width: 768px) 50vw, 25vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <span className="absolute inset-0 flex items-center justify-center bg-party-ink/0 font-display text-lg font-bold italic text-white opacity-0 transition-all duration-300 group-hover:bg-party-ink/40 group-hover:opacity-100">
-                View
-              </span>
-            </div>
+            <Image
+              src={src}
+              alt={`Bounce FX event photo ${i + 1}`}
+              fill
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <span className="absolute inset-0 flex items-center justify-center bg-party-ink/0 font-display text-lg font-bold italic text-white opacity-0 transition-all duration-300 group-hover:bg-party-ink/40 group-hover:opacity-100">
+              View
+            </span>
           </button>
         ))}
       </div>

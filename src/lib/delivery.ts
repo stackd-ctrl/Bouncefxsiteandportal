@@ -46,6 +46,49 @@ const ZIP_COORDS: Record<string, { lat: number; lng: number }> = {
   "22485": { lat: 38.2589, lng: -77.0586 }, // King George
 };
 
+/**
+ * Coarser fallback: approximate centroids by ZIP **prefix** (first 3 digits) so
+ * the offline calculator returns a sensible estimate for *any* VA / MD / DC ZIP,
+ * not only the handful in ZIP_COORDS above. Exact ZIP wins when we have it; this
+ * catches everything else in the region. (Precise any-address distance needs the
+ * Google Maps key — until then these are clearly flagged as estimates.)
+ */
+const ZIP3_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  // Washington DC
+  "200": { lat: 38.9, lng: -77.03 },
+  "202": { lat: 38.9, lng: -77.03 },
+  "203": { lat: 38.9, lng: -77.03 },
+  "204": { lat: 38.9, lng: -77.03 },
+  "205": { lat: 38.9, lng: -77.03 },
+  // Maryland
+  "206": { lat: 38.6, lng: -76.9 }, // Waldorf / Southern MD
+  "207": { lat: 39.0, lng: -77.0 }, // Silver Spring
+  "208": { lat: 39.02, lng: -77.1 }, // Bethesda / Rockville
+  "209": { lat: 39.0, lng: -77.0 }, // Silver Spring
+  "210": { lat: 39.29, lng: -76.61 }, // Baltimore
+  "211": { lat: 39.29, lng: -76.61 },
+  "212": { lat: 39.29, lng: -76.61 },
+  "214": { lat: 38.98, lng: -76.49 }, // Annapolis
+  "217": { lat: 39.41, lng: -77.41 }, // Frederick MD
+  // Virginia
+  "220": { lat: 39.0, lng: -77.4 }, // Dulles / Sterling
+  "221": { lat: 38.85, lng: -77.3 }, // Fairfax
+  "222": { lat: 38.88, lng: -77.1 }, // Arlington
+  "223": { lat: 38.82, lng: -77.07 }, // Alexandria
+  "224": { lat: 38.3, lng: -77.46 }, // Fredericksburg
+  "225": { lat: 38.3, lng: -77.46 }, // Fredericksburg
+  "226": { lat: 39.18, lng: -78.16 }, // Winchester
+  "227": { lat: 38.47, lng: -77.99 }, // Culpeper
+  "228": { lat: 38.45, lng: -78.87 }, // Harrisonburg
+  "229": { lat: 38.03, lng: -78.48 }, // Charlottesville
+  "230": { lat: 37.54, lng: -77.43 }, // Richmond
+  "231": { lat: 37.54, lng: -77.43 }, // Richmond
+  "232": { lat: 37.54, lng: -77.43 }, // Richmond
+  "233": { lat: 36.85, lng: -76.21 }, // Norfolk / VA Beach
+  "235": { lat: 36.85, lng: -76.21 },
+  "238": { lat: 37.21, lng: -77.4 }, // Petersburg
+};
+
 function haversineMiles(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number }
@@ -78,7 +121,9 @@ function feeForMiles(miles: number): { fee: number; free: boolean } {
 
 /** Offline estimate from a ZIP code using the local coordinate table. */
 export function estimateFromZip(zip: string): DeliveryQuote | null {
-  const coords = ZIP_COORDS[zip];
+  // Exact ZIP first (most accurate), then fall back to the ZIP3 region centroid
+  // so any VA/MD/DC ZIP still gets an estimate.
+  const coords = ZIP_COORDS[zip] ?? ZIP3_CENTROIDS[zip.slice(0, 3)];
   if (!coords) return null;
   const straight = haversineMiles(ORIGIN_COORDS, coords);
   const miles = Math.round(straight * 1.25 * 10) / 10; // approx driving miles

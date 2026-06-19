@@ -90,22 +90,30 @@ export default function DeliveryCalculator({
             <p className="font-display text-2xl font-bold italic text-party-green">
               Free delivery!
             </p>
-          ) : (
+          ) : quote.miles > 0 ? (
             <p className="font-display text-2xl font-bold italic text-party-ink">
               Delivery fee: {money(quote.fee)}
             </p>
+          ) : (
+            <p className="font-display text-2xl font-bold italic text-party-ink">
+              We&apos;ll confirm your rate
+            </p>
           )}
           <p className="mt-1 text-sm text-party-ink/70">
-            {quote.miles > 0 && (
+            {quote.miles > 0 ? (
               <>
                 ~{quote.miles} mi from {quote.origin}.{" "}
+                {quote.free
+                  ? "You're inside our free delivery zone."
+                  : "Billed at $2.00/mile beyond the free 15-mile radius."}
+                {quote.estimated && (
+                  <span className="text-party-ink/50"> (estimate)</span>
+                )}
               </>
-            )}
-            {quote.free
-              ? "You're inside our free delivery zone."
-              : "Billed at $2.00/mile beyond the free 15-mile radius."}
-            {quote.estimated && (
-              <span className="text-party-ink/50"> (estimate)</span>
+            ) : quote.free ? (
+              "You're inside our free delivery zone."
+            ) : (
+              "We deliver across the DMV — give us a call or text and we'll confirm the exact delivery rate for your address."
             )}
           </p>
         </div>

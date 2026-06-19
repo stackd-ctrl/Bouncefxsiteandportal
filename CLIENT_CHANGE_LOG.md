@@ -24,20 +24,20 @@ that fall outside the original build (potential change-order / add-on work).
 | 4 | Add more blog articles | S–M | Build | Backlog | Content volume depends on # of articles client supplies. |
 | 5 | Google reviews live + link out to leave a review | M | **Add-on** | Backlog | Google Places API integration (key, billing, caching). Review-link button is XS; live pull is the cost. |
 | 6 | Calendar links + booking notifications | M | Watch | Backlog | ICS/Google Cal links (S) + notification emails on booking (needs Resend → ties to #1). |
-| 7 | "Follow the fun" scrolling feature is broken | S | Build | Backlog | Bug fix (Instagram/marquee strip). |
-| 8 | Bounce house has dual slides, basketball hoops, climbing walls, wet or dry | XS | Build | Backlog | Product description/spec copy (overlaps #3). |
-| 9 | Add military discount to home page | XS | Build | Backlog | Copy/badge on home (already on contact page). |
-| 10 | Keep bundle names; info & pricing are wrong | S | Build | Backlog | Correct bundle contents + prices (client to confirm correct numbers). |
-| 11 | Swap phone numbers — the …9996 number should be first | XS | Build | Backlog | Settings → phones order. |
-| 12 | Add date & time of delivery to the booking form | S | Build | Backlog | New fields on booking form + carry through to order/notification. |
-| 13 | Flat **$50 deposit** everywhere, not 50% | S | Build | Backlog | Changes deposit logic (Stripe amount calc, copy in How-it-works/FAQ/bundles). |
-| 14 | Service area = anywhere in the DMV; $2.00/mi applies **beyond 15 mi**; calculator must work for any ZIP | M | Watch | Backlog | Needs reliable geocoding for arbitrary ZIPs (Distance Matrix already in stack). Verify edge cases + copy. |
+| 7 | "Follow the fun" scrolling feature is broken | S | Build | **Done** | Root cause: `prefers-reduced-motion` CSS froze the marquees. Exempted the decorative brand marquees so they keep scrolling. (2026-06-18) |
+| 8 | Bounce house has dual slides, basketball hoops, climbing walls, wet or dry | XS | Build | Backlog | Product description/spec copy (overlaps #3). **Needs client to supply the spec text.** |
+| 9 | Add military discount to home page | XS | Build | **Done** | Military-discount pill under the home hero. (2026-06-18) |
+| 10 | Keep bundle names; info & pricing are wrong | S | Build | Backlog | Correct bundle contents + prices. **Needs client to confirm correct numbers.** |
+| 11 | Swap phone numbers — the …9996 number should be first | XS | Build | **Done** | 571-264-9996 now first in `DEFAULT_SITE.phones`. (2026-06-18) |
+| 12 | Add date & time of delivery to the booking form | S | Build | **Done** | Preferred delivery date + time fields; shown on review + carried into order notes. (2026-06-18) |
+| 13 | Flat **$50 deposit** everywhere, not 50% | S | Build | **Done** | New `lib/pricing.ts` (`depositFor`); checkout + BookingFlow + all copy updated. (2026-06-18) |
+| 14 | Service area = anywhere in the DMV; $2.00/mi applies **beyond 15 mi**; calculator must work for any ZIP | M | Watch | **Partial** | Added offline ZIP3-region fallback so any VA/MD/DC ZIP estimates; unknown ZIPs show "we'll confirm" not $0. **Exact any-address distance still needs the Google Maps key (ties to #1).** (2026-06-18) |
 | 15 | Lock the admin portal (real auth) | M | Watch | Backlog | Proper auth gate; ties to #1 (Supabase). More portal feature detail coming from client. |
 | 16 | Add Stripe for payments; set client as a developer | M | **Add-on** | Backlog | Live Stripe account + keys + checkout wiring; add client to Stripe team. |
-| 17 | Photo cards dynamic — adjust to photos added, no white space | S–M | Build | Backlog | Masonry/auto-fit gallery layout. |
-| 18 | "Build Your Party" form — update for ease of use + correct info | S–M | Build | Backlog | UX pass + correct recommendations/pricing. |
+| 17 | Photo cards dynamic — adjust to photos added, no white space | S–M | Build | **Done** | Gallery now uniform square auto-fill tiles — gap-free for any photo count. (2026-06-18) |
+| 18 | "Build Your Party" form — update for ease of use + correct info | S–M | Build | **Done** | Occasion now drives the recommendation (seating/shade/inflatable sizing) + explainer; clearer labeling. (2026-06-18) |
 | 19 | Admin can add more products, photos, etc. | M–L | Watch | Backlog | Full CRUD (create new items, not just edit overrides). Depends on #1 for persistence. |
-| 20 | "Will it fit" — let user choose units (sq ft, inches, ft, etc.) | S | Build | Backlog | Unit toggle + conversions in SpaceChecker. |
+| 20 | "Will it fit" — let user choose units (sq ft, inches, ft, etc.) | S | Build | **Done** | Unit toggle (ft/in/yd/m) + conversions in SpaceChecker. (2026-06-18) |
 | 21 | Some empty spaces — condense a bit | S | Build | Backlog | Spacing/layout polish across pages. |
 
 ---

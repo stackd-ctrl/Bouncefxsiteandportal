@@ -41,6 +41,10 @@ export default async function HomePage() {
               Browse Rentals
             </Link>
           </div>
+          <p className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/10 px-4 py-1.5 font-body text-sm font-semibold text-white">
+            <span aria-hidden>★</span>
+            Proud to offer military discounts — just ask
+          </p>
         </div>
       </section>
 

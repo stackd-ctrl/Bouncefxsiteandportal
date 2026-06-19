@@ -104,7 +104,7 @@ export default function AvailabilityExplorer({
           <ul className="mt-3 space-y-3 text-sm">
             {[
               ["Free delivery", "Within 15 miles of 22401"],
-              ["50% deposit", "Confirms your date online"],
+              ["$50 deposit", "Confirms your date online"],
               ["Setup included", "We deliver, set up & pick up"],
             ].map(([t, d]) => (
               <li key={t} className="flex items-start justify-between gap-3">

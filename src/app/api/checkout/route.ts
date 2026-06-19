@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProducts, getBundles } from "@/lib/catalog";
 import { getDeliveryQuote } from "@/lib/delivery";
+import { depositFor } from "@/lib/pricing";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { createAdminSupabase, supabaseConfigured } from "@/lib/supabase/server";
 
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
   const deliveryFee = delivery.fee;
 
   const total = Math.round((subtotal + deliveryFee) * 100) / 100;
-  const deposit = Math.round(total * 0.5 * 100) / 100;
+  const deposit = depositFor(total);
 
   // ── Persist a pending booking (if Supabase is configured) ──
   let bookingId: string | null = null;
@@ -127,7 +128,7 @@ export async function POST(req: Request) {
               currency: "usd",
               unit_amount: Math.round(deposit * 100),
               product_data: {
-                name: "Bounce FX Booking Deposit (50%)",
+                name: "Bounce FX Booking Deposit ($50)",
                 description: lineLabels.join(", ").slice(0, 250),
               },
             },

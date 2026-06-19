@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import type { Product, Bundle, DeliveryQuote } from "@/lib/types";
 import { money, prettyDate, todayISO } from "@/lib/format";
+import { depositFor } from "@/lib/pricing";
 import Calendar from "./Calendar";
 
 const EVENT_TYPES = [
@@ -49,6 +50,8 @@ export default function BookingFlow({
     customerPhone: "",
     eventAddress: "",
     eventType: "Birthday",
+    deliveryDate: "",
+    deliveryTime: "",
     specialRequests: initial.note ?? "",
   });
 
@@ -75,7 +78,7 @@ export default function BookingFlow({
 
   const deliveryFee = delivery?.fee ?? 0;
   const total = Math.round((subtotal + deliveryFee) * 100) / 100;
-  const deposit = Math.round(total * 0.5 * 100) / 100;
+  const deposit = depositFor(total);
   const hasSelection = selectedProducts.length > 0 || !!bundle;
 
   function toggleProduct(id: string) {
@@ -121,6 +124,10 @@ export default function BookingFlow({
           ...form,
           specialRequests: [
             form.specialRequests,
+            (form.deliveryDate || form.deliveryTime) &&
+              `[Preferred delivery: ${
+                form.deliveryDate ? prettyDate(form.deliveryDate) : "event date"
+              }${form.deliveryTime ? ` at ${formatTime(form.deliveryTime)}` : ""}]`,
             `[Agreement signed by ${signature.trim()} on ${todayISO()}]`,
           ]
             .filter(Boolean)
@@ -347,9 +354,44 @@ export default function BookingFlow({
                 >
                   {delivery.free
                     ? "Free delivery to this address!"
-                    : `Estimated delivery fee: ${money(delivery.fee)}`}
+                    : delivery.miles > 0
+                    ? `Estimated delivery fee: ${money(delivery.fee)}`
+                    : "We'll confirm your exact delivery rate — we deliver across the DMV."}
                 </p>
               )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="field-label">Preferred delivery date</label>
+                <input
+                  type="date"
+                  value={form.deliveryDate}
+                  min={todayISO()}
+                  onChange={(e) =>
+                    setForm({ ...form, deliveryDate: e.target.value })
+                  }
+                  className="field mt-1.5"
+                />
+                <p className="mt-1 text-xs text-party-ink/45">
+                  Leave blank to deliver on your event date
+                  {date ? ` (${prettyDate(date)})` : ""}.
+                </p>
+              </div>
+              <div>
+                <label className="field-label">Preferred delivery time</label>
+                <input
+                  type="time"
+                  value={form.deliveryTime}
+                  onChange={(e) =>
+                    setForm({ ...form, deliveryTime: e.target.value })
+                  }
+                  className="field mt-1.5"
+                />
+                <p className="mt-1 text-xs text-party-ink/45">
+                  We&apos;ll confirm an exact window before your event.
+                </p>
+              </div>
             </div>
 
             <div>
@@ -389,6 +431,17 @@ export default function BookingFlow({
 
             <div className="card bg-party-cream p-5">
               <Row label="Event date" value={date ? prettyDate(date) : "—"} />
+              <Row
+                label="Delivery"
+                value={
+                  (form.deliveryDate
+                    ? prettyDate(form.deliveryDate)
+                    : date
+                    ? prettyDate(date)
+                    : "On event date") +
+                  (form.deliveryTime ? ` · ${formatTime(form.deliveryTime)}` : "")
+                }
+              />
               <Row label="Name" value={form.customerName} />
               <Row label="Email" value={form.customerEmail} />
               <Row label="Phone" value={form.customerPhone} />
@@ -411,7 +464,7 @@ export default function BookingFlow({
                   times; (2) no shoes, sharp objects, food, or drinks inside
                   inflatables; (3) units must be evacuated in high winds
                   (15+ mph) or storms; (4) the renter is responsible for damage
-                  beyond normal use; (5) the 50% deposit is non-refundable within
+                  beyond normal use; (5) the $50 deposit is non-refundable within
                   72 hours of the event; (6) the remaining balance is due on the
                   day of delivery; (7) Bounce FX is licensed & insured and is not
                   liable for injury resulting from misuse. Full terms provided on
@@ -472,8 +525,8 @@ export default function BookingFlow({
               </p>
             )}
             <p className="text-center text-sm text-party-ink/50">
-              50% deposit confirms your booking. Remaining balance due on event
-              day. Secure payment via Stripe.
+              A flat $50 deposit confirms your booking. Remaining balance due on
+              event day. Secure payment via Stripe.
             </p>
           </div>
         )}
@@ -529,8 +582,12 @@ export default function BookingFlow({
               <span>{money(total)}</span>
             </div>
             <div className="flex justify-between rounded-lg bg-party-green/15 px-3 py-2 font-display font-bold text-party-green">
-              <span>Deposit (50%)</span>
+              <span>Deposit due now</span>
               <span>{money(deposit)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-party-ink/60">
+              <span>Balance on event day</span>
+              <span>{money(Math.round((total - deposit) * 100) / 100)}</span>
             </div>
           </div>
           {date && (
@@ -572,6 +629,15 @@ function Field({
       />
     </div>
   );
+}
+
+/** "14:30" → "2:30 PM" for friendly display. */
+function formatTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return hhmm;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
 }
 
 function Row({ label, value }: { label: string; value: string }) {

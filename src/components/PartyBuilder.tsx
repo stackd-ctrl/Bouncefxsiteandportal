@@ -6,7 +6,44 @@ import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { money } from "@/lib/format";
 
-const EVENT_TYPES = ["Birthday", "Church", "School", "HOA", "Corporate"];
+// Each occasion tunes the recommendation: how many guests share a table, when
+// shade (a tent) becomes worth it, and when to size up to the big inflatable.
+const OCCASIONS: Record<
+  string,
+  { seatPer: number; tentAt: number; bigPlayAt: number; note: string }
+> = {
+  Birthday: {
+    seatPer: 8,
+    tentAt: 35,
+    bigPlayAt: 45,
+    note: "Bounce-house first, with seating for the grown-ups.",
+  },
+  Church: {
+    seatPer: 6,
+    tentAt: 25,
+    bigPlayAt: 55,
+    note: "Plenty of seating and shade for a fellowship crowd.",
+  },
+  School: {
+    seatPer: 8,
+    tentAt: 30,
+    bigPlayAt: 35,
+    note: "Sized up for big play — the headline inflatable comes in early.",
+  },
+  HOA: {
+    seatPer: 8,
+    tentAt: 25,
+    bigPlayAt: 45,
+    note: "Block-party setup with shade and a crowd-pleaser inflatable.",
+  },
+  Corporate: {
+    seatPer: 6,
+    tentAt: 25,
+    bigPlayAt: 55,
+    note: "Comfortable seating and shade for a company family day.",
+  },
+};
+const EVENT_TYPES = Object.keys(OCCASIONS);
 
 export default function PartyBuilder({ products }: { products: Product[] }) {
   const [guests, setGuests] = useState(30);
@@ -17,22 +54,25 @@ export default function PartyBuilder({ products }: { products: Product[] }) {
   const tent = products.find((p) => p.category === "tent");
   const inflatables = products.filter((p) => p.category === "inflatable");
 
+  const rules = OCCASIONS[eventType] ?? OCCASIONS.Birthday;
+
   const setup = useMemo(() => {
     const items: { product: Product; qty: number }[] = [];
     if (chairs) items.push({ product: chairs, qty: guests });
-    if (table) items.push({ product: table, qty: Math.ceil(guests / 8) });
-    if (tent && guests >= 30)
-      items.push({ product: tent, qty: guests >= 60 ? 2 : 1 });
-    // headline inflatable scales with crowd
+    if (table)
+      items.push({ product: table, qty: Math.ceil(guests / rules.seatPer) });
+    if (tent && guests >= rules.tentAt)
+      items.push({ product: tent, qty: guests >= rules.tentAt * 2 ? 2 : 1 });
+    // headline inflatable scales with crowd + occasion
     const pick =
-      guests >= 45
+      guests >= rules.bigPlayAt
         ? inflatables.find((p) => p.name.includes("Grand")) ?? inflatables[0]
         : guests >= 18
         ? inflatables[0]
         : null;
     if (pick) items.push({ product: pick, qty: 1 });
     return items;
-  }, [guests, chairs, table, tent, inflatables]);
+  }, [guests, chairs, table, tent, inflatables, rules]);
 
   const total = setup.reduce(
     (s, it) => s + it.product.price_per_day * it.qty,
@@ -88,10 +128,19 @@ export default function PartyBuilder({ products }: { products: Product[] }) {
             <span>10</span>
             <span>150</span>
           </div>
+          <p className="mt-4 rounded-xl bg-party-cream px-4 py-3 text-sm text-party-ink/70">
+            <span className="font-semibold text-party-ink">
+              {eventType} · {guests} guests:
+            </span>{" "}
+            {rules.note}
+          </p>
         </div>
 
         {/* Recommended items */}
-        <div className="mt-6 space-y-3">
+        <h3 className="mt-6 font-display text-lg font-bold italic">
+          Recommended setup
+        </h3>
+        <div className="mt-3 space-y-3">
           {setup.map((it) => (
             <div
               key={it.product.id}
@@ -150,7 +199,7 @@ export default function PartyBuilder({ products }: { products: Product[] }) {
             </span>
           </div>
           <p className="mt-1 text-xs text-white/50">
-            Day rate · 50% deposit holds your date · delivery calculated at
+            Day rate · $50 deposit holds your date · delivery calculated at
             checkout.
           </p>
           <Link href={bookHref} className="btn-yellow btn-pill mt-5 w-full">

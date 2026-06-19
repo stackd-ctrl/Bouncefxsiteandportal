@@ -117,11 +117,13 @@ body {
     transform: none;
     transition: none;
   }
-  .animate-marquee,
-  .animate-marquee-fast,
-  .animate-marquee-rev,
+  /* Decorative floating accents respect reduced-motion… */
   .animate-float-slow,
   .animate-float-mid {
     animation: none !important;
   }
+  /* …but the brand marquee bands ("Follow the fun" / "Party vibes") are a
+     continuous decorative scroll the client wants always running. Keeping them
+     in motion here avoids the "scroller looks frozen / broken" report on devices
+     that have Reduce Motion enabled. */
 }

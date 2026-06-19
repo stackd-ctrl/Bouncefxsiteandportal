@@ -117,7 +117,7 @@ function answer(
       .map((p) => `• ${p.name} — ${money(p.price_per_day)}/day`)
       .join("\n");
     return {
-      reply: `Here's our day rates:\n${top}\n\nBundles save you more — and a 50% deposit holds your date.`,
+      reply: `Here's our day rates:\n${top}\n\nBundles save you more — and a flat $50 deposit holds your date.`,
       links: [
         { label: "Shop all rentals", href: "/shop" },
         { label: "See bundles", href: "/bundles" },

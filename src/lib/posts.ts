@@ -101,7 +101,7 @@ export const POSTS: Post[] = [
       { h: "3. Create zones" },
       { p: "Group seating, food, and play into separate areas so the space flows and parents can relax while kids play." },
       { h: "4. Book early" },
-      { p: "Spring and summer weekends fill up fast. Lock in your date with a quick 50% deposit." },
+      { p: "Spring and summer weekends fill up fast. Lock in your date with a quick $50 deposit." },
       { h: "5. Let us handle setup" },
       { p: "Delivery, setup, and pickup are always included — so you can actually enjoy the party you're hosting." },
     ],

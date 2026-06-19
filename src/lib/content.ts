@@ -149,7 +149,7 @@ export interface SiteContent {
 }
 
 export const DEFAULT_SITE: SiteInfo = {
-  phones: ["571-494-3903", "571-264-9996"],
+  phones: ["571-264-9996", "571-494-3903"],
   email: "Info@bouncefxpartyrentals.com",
   instagram: "https://instagram.com/bouncefxpartyrentals",
   facebook: "https://facebook.com/share/1B5t1NjTLc",
@@ -182,7 +182,7 @@ export const DEFAULT_PAGES: PagesContent = {
       },
       {
         title: "Pay your deposit",
-        desc: "Lock in your booking with a simple 50% deposit online. The balance is due on the day of your event.",
+        desc: "Lock in your booking with a simple flat $50 deposit online. The balance is due on the day of your event.",
       },
       {
         title: "We deliver & set up",
@@ -369,7 +369,7 @@ export const DEFAULT_PAGES: PagesContent = {
       },
       {
         title: "What does the deposit cover?",
-        desc: "A 50% deposit confirms your date and reserves your equipment. The remaining balance is due on the day of your event.",
+        desc: "A flat $50 deposit confirms your date and reserves your equipment. The remaining balance is due on the day of your event.",
       },
       {
         title: "Is delivery really included?",
