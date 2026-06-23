@@ -54,7 +54,7 @@ export default function MediaPanel({ media }: { media: MediaInfo }) {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-soft">
-          <h3 className="font-display text-lg font-bold italic">Homepage hero</h3>
+          <h3 className="text-base font-bold text-gray-900">Homepage hero</h3>
           <p className="mb-3 text-sm text-party-ink/55">
             The big banner photo at the top of the home page.
           </p>
@@ -69,7 +69,7 @@ export default function MediaPanel({ media }: { media: MediaInfo }) {
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-soft">
-          <h3 className="font-display text-lg font-bold italic">Logo</h3>
+          <h3 className="text-base font-bold text-gray-900">Logo</h3>
           <p className="mb-3 text-sm text-party-ink/55">
             Shown in the footer, about, availability, and confirmation.
           </p>
@@ -86,7 +86,7 @@ export default function MediaPanel({ media }: { media: MediaInfo }) {
 
       <div className="rounded-2xl bg-white p-5 shadow-soft">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg font-bold italic">
+          <h3 className="text-base font-bold text-gray-900">
             Gallery photos
           </h3>
           <button

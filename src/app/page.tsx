@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getProducts, getBundles } from "@/lib/catalog";
 import { readContent } from "@/lib/content";
-import { TESTIMONIALS } from "@/lib/data";
+import { REVIEWS } from "@/lib/data";
 import BundleCard from "@/components/BundleCard";
 import DeliveryMap from "@/components/DeliveryMap";
 import Marquee, { WaveMarquee } from "@/components/Marquee";
@@ -120,7 +120,7 @@ export default async function HomePage() {
             <p className="mt-4 text-lg text-party-ink/70">{c.bundlesSub}</p>
           </div>
           <div className="mt-14 grid gap-7 lg:grid-cols-3">
-            {bundles.map((b) => (
+            {bundles.slice(0, 3).map((b) => (
               <div key={b.id} className="reveal">
                 <BundleCard bundle={b} featured={b.tier === "silver"} />
               </div>
@@ -145,8 +145,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <WaveMarquee text="Follow the fun" />
-
       {/* ───────────── GALLERY ───────────── */}
       <section className="bg-party-cream">
         <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 md:pb-28">
@@ -160,7 +158,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ───────────── TESTIMONIALS ───────────── */}
+      {/* ───────────── REVIEWS ───────────── */}
       <section className="bg-party-yellow text-party-ink">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
           <div className="reveal max-w-2xl">
@@ -168,21 +166,23 @@ export default async function HomePage() {
             <h2 className="section-title mt-3">{c.testimonialsTitle}</h2>
           </div>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {TESTIMONIALS.map((t, i) => (
+            {REVIEWS.slice(0, 3).map((t, i) => (
               <figure
-                key={t.name}
+                key={t.id}
                 className="reveal border-t-2 border-party-ink pt-6"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
-                <p className="eyebrow text-party-red">Rated 5 / 5</p>
+                <p className="eyebrow text-party-red">Rated {t.rating} / 5</p>
                 <blockquote className="mt-3 font-display text-xl font-medium italic leading-relaxed">
-                  “{t.quote}”
+                  “{t.text}”
                 </blockquote>
                 <figcaption className="mt-5">
                   <p className="font-display text-lg font-bold italic">
                     {t.name}
                   </p>
-                  <p className="text-sm text-party-ink/60">{t.role}</p>
+                  {t.meta && (
+                    <p className="text-sm text-party-ink/60">{t.meta}</p>
+                  )}
                 </figcaption>
               </figure>
             ))}
@@ -194,6 +194,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <WaveMarquee text="Follow the fun" />
 
       <InstagramStrip />
 

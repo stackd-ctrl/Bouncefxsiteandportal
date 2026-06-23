@@ -7,8 +7,8 @@ import { createAdminSupabase, supabaseConfigured } from "@/lib/supabase/server";
  * heat-map calendar. Returns { loads: { "YYYY-MM-DD": 0..1 } } where the value
  * is bookedItems / totalItems for that date.
  *
- * Without Supabase, a deterministic demo pattern is generated (weekends busier)
- * so the heat-map looks alive in preview mode.
+ * Without Supabase configured, no bookings exist yet, so every day reports as
+ * available (empty load map).
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -52,15 +52,6 @@ export async function GET(req: Request) {
     }
   }
 
-  // Deterministic demo pattern (no Math.random — stable across renders)
-  for (let d = 1; d <= daysInMonth; d++) {
-    const iso = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const dow = new Date(year, month - 1, d).getDay();
-    const weekend = dow === 0 || dow === 5 || dow === 6;
-    let load = weekend ? 0.55 : 0.1;
-    load += ((d * 7) % 5) / 12; // 0..0.33 variation
-    if (d % 9 === 0) load = 1; // a few fully-booked days
-    loads[iso] = Math.min(Math.round(load * 100) / 100, 1);
-  }
+  // No backend yet → no bookings → every day is open.
   return NextResponse.json({ loads });
 }

@@ -40,18 +40,15 @@ export default function BundleCard({
           Most Popular
         </span>
       )}
+      {!featured && bundle.badge && (
+        <span className="absolute -top-3 left-8 z-10 rounded-full bg-party-red px-4 py-1 font-body text-xs font-bold uppercase tracking-wider text-white">
+          {bundle.badge}
+        </span>
+      )}
 
       {photos.length > 0 && <BundleGallery images={photos} />}
 
-      <span
-        className={`self-start rounded-full px-3 py-1 font-body text-xs font-bold uppercase tracking-wider ${
-          featured ? "bg-white/20 text-white" : style.badge
-        }`}
-      >
-        {style.label} Bundle
-      </span>
-
-      <h3 className="mt-4 font-display text-3xl font-bold italic">
+      <h3 className="mt-1 font-display text-3xl font-bold italic">
         {bundle.name}
       </h3>
       <p className={`mt-2 text-sm ${featured ? "text-white/85" : "text-party-ink/65"}`}>
@@ -62,21 +59,25 @@ export default function BundleCard({
         <span className="font-display text-5xl font-bold italic">
           {money(bundle.bundle_price)}
         </span>
-        <span
-          className={`mb-2 text-sm font-semibold line-through ${
-            featured ? "text-white/60" : "text-party-ink/40"
+        {savings > 0 && (
+          <span
+            className={`mb-2 text-sm font-semibold line-through ${
+              featured ? "text-white/60" : "text-party-ink/40"
+            }`}
+          >
+            {money(bundle.individual_value)}
+          </span>
+        )}
+      </div>
+      {savings > 0 && (
+        <p
+          className={`text-sm font-bold ${
+            featured ? "text-party-yellow" : style.accent
           }`}
         >
-          {money(bundle.individual_value)}
-        </span>
-      </div>
-      <p
-        className={`text-sm font-bold ${
-          featured ? "text-party-yellow" : style.accent
-        }`}
-      >
-        You save {money(savings)}
-      </p>
+          You save {money(savings)}
+        </p>
+      )}
 
       <ul className="mt-6 flex-1 space-y-3">
         {(bundle.highlights ?? []).map((h) => (

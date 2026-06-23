@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import type { Product, Bundle, DeliveryQuote } from "@/lib/types";
 import { money, prettyDate, todayISO } from "@/lib/format";
-import { depositFor } from "@/lib/pricing";
+import { depositFor, amountDueNow, type PaymentChoice } from "@/lib/pricing";
 import Calendar from "./Calendar";
 
 const EVENT_TYPES = [
@@ -61,6 +61,8 @@ export default function BookingFlow({
   const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [signature, setSignature] = useState("");
+  const [payChoice, setPayChoice] = useState<PaymentChoice>("deposit");
+  const [customAmount, setCustomAmount] = useState<number | "">("");
 
   const bundle = useMemo(
     () => bundles.find((b) => b.id === selectedBundle) ?? null,
@@ -79,6 +81,12 @@ export default function BookingFlow({
   const deliveryFee = delivery?.fee ?? 0;
   const total = Math.round((subtotal + deliveryFee) * 100) / 100;
   const deposit = depositFor(total);
+  const amountToPay = amountDueNow(
+    total,
+    payChoice,
+    typeof customAmount === "number" ? customAmount : undefined
+  );
+  const balanceAfter = Math.round((total - amountToPay) * 100) / 100;
   const hasSelection = selectedProducts.length > 0 || !!bundle;
 
   function toggleProduct(id: string) {
@@ -121,6 +129,8 @@ export default function BookingFlow({
           productIds: selectedProducts,
           bundleId: selectedBundle || undefined,
           eventDate: date,
+          paymentChoice: payChoice,
+          amountToPay,
           ...form,
           specialRequests: [
             form.specialRequests,
@@ -467,10 +477,17 @@ export default function BookingFlow({
                   beyond normal use; (5) the $50 deposit is non-refundable within
                   72 hours of the event; (6) the remaining balance is due on the
                   day of delivery; (7) Bounce FX is licensed & insured and is not
-                  liable for injury resulting from misuse. Full terms provided on
-                  delivery.
+                  liable for injury resulting from misuse.
                 </p>
               </div>
+              <a
+                href="/rental-agreement.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-party-red underline underline-offset-2 hover:text-party-red/80"
+              >
+                Read the full rental &amp; safety agreement (PDF) →
+              </a>
               <label className="mt-3 flex items-start gap-2.5 text-sm">
                 <input
                   type="checkbox"
@@ -499,6 +516,89 @@ export default function BookingFlow({
               </div>
             </div>
 
+            {/* Payment amount */}
+            <div className="rounded-2xl border border-party-ink/15 bg-white p-5">
+              <h3 className="font-display text-lg font-bold italic">
+                How would you like to pay?
+              </h3>
+              <div className="mt-3 space-y-2">
+                {[
+                  {
+                    key: "deposit" as PaymentChoice,
+                    title: "Pay deposit now",
+                    sub: `${money(total - deposit)} balance due on event day`,
+                    amount: deposit,
+                  },
+                  {
+                    key: "full" as PaymentChoice,
+                    title: "Pay in full",
+                    sub: "Nothing left to pay later",
+                    amount: total,
+                  },
+                  {
+                    key: "custom" as PaymentChoice,
+                    title: "Pay another amount",
+                    sub: "Choose a partial payment",
+                    amount: null,
+                  },
+                ].map((opt) => (
+                  <label
+                    key={opt.key}
+                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 transition-colors ${
+                      payChoice === opt.key
+                        ? "border-party-red bg-party-red/5"
+                        : "border-party-ink/15 hover:border-party-ink/30"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <input
+                        type="radio"
+                        name="payChoice"
+                        checked={payChoice === opt.key}
+                        onChange={() => setPayChoice(opt.key)}
+                        className="h-4 w-4 accent-party-red"
+                      />
+                      <span>
+                        <span className="font-semibold">{opt.title}</span>
+                        <span className="block text-xs text-party-ink/55">
+                          {opt.sub}
+                        </span>
+                      </span>
+                    </span>
+                    {opt.amount !== null && (
+                      <span className="font-display text-lg font-bold italic">
+                        {money(opt.amount)}
+                      </span>
+                    )}
+                  </label>
+                ))}
+              </div>
+
+              {payChoice === "custom" && (
+                <div className="mt-3">
+                  <label className="field-label">Amount to pay now ($)</label>
+                  <input
+                    type="number"
+                    min={deposit}
+                    max={total}
+                    step="0.01"
+                    className="field"
+                    placeholder={String(deposit)}
+                    value={customAmount}
+                    onChange={(e) =>
+                      setCustomAmount(
+                        e.target.value === "" ? "" : Number(e.target.value)
+                      )
+                    }
+                  />
+                  <p className="mt-1 text-xs text-party-ink/55">
+                    Between {money(deposit)} (min) and {money(total)} (full).
+                    Balance after: {money(balanceAfter)}.
+                  </p>
+                </div>
+              )}
+            </div>
+
             {error && (
               <p className="rounded-lg border border-party-red/40 bg-party-red/10 px-4 py-3 font-semibold text-party-red">
                 {error}
@@ -514,9 +614,7 @@ export default function BookingFlow({
                 disabled={submitting || !agreed || signature.trim().length < 2}
                 className="btn-green flex-1 disabled:opacity-50"
               >
-                {submitting
-                  ? "Starting checkout…"
-                  : `Pay ${money(deposit)} deposit`}
+                {submitting ? "Starting checkout…" : `Pay ${money(amountToPay)}`}
               </button>
             </div>
             {(!agreed || signature.trim().length < 2) && (
@@ -525,8 +623,10 @@ export default function BookingFlow({
               </p>
             )}
             <p className="text-center text-sm text-party-ink/50">
-              A flat $50 deposit confirms your booking. Remaining balance due on
-              event day. Secure payment via Stripe.
+              {balanceAfter > 0
+                ? `${money(balanceAfter)} balance due on event day. `
+                : "Paid in full — nothing due later. "}
+              Secure payment via Stripe.
             </p>
           </div>
         )}

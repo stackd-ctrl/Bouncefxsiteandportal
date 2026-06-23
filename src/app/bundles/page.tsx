@@ -10,35 +10,36 @@ import { money } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Bundle Packages",
   description:
-    "Save with Bounce FX bundle packages — Bronze, Silver and Gold tiers combining chairs, tables, tents and bounce houses.",
+    "Save with Bounce FX bundle packages — Small, Medium, Large and our Tent Bundle Deal, combining bounce houses, tables, chairs and tents.",
 };
 
 type Cell = string | boolean;
 
-const COMPARISON: { label: string; rows: [string, Cell, Cell, Cell][] } = {
-  label: "Compare every package",
-  rows: [
-    ["White folding chairs", "50", "50", "50"],
-    ["6ft banquet tables", "8", "8", "8"],
-    ["20x20 high-peak tent", false, "1", "1"],
-    ["Grand Party Dome bounce house", false, false, "1"],
-    ["Guest capacity", "Up to 50", "Up to 60", "60+ / big events"],
-    ["Delivery & setup", true, true, true],
-    ["Pickup & teardown", true, true, true],
-    ["Rain-or-shine coverage", false, true, true],
-    ["Best for", "Backyard birthdays", "All-day gatherings", "The full celebration"],
-  ],
-};
+// Columns are in the same order as the BUNDLES catalog: Small, Medium, Large, Tent.
+const COLUMNS = ["Small", "Medium", "Large", "Tent Deal"];
+const FEATURED_COL = 1; // Medium = most popular
 
-const PRICING: [string, number, number][] = [
-  // [tier label, individualValue, bundlePrice]
-  ["Bronze", 215, 175],
-  ["Silver", 515, 425],
-  ["Gold", 790, 675],
+const COMPARISON_LABEL = "Compare every package";
+const COMPARISON_ROWS: { label: string; cells: Cell[] }[] = [
+  { label: "Bounce house", cells: ["1", "1", "1", false] },
+  { label: "20x20 high-peak tent", cells: [false, false, false, "1"] },
+  { label: "6ft banquet tables", cells: ["2", "4", "6", "5"] },
+  { label: "White folding chairs", cells: ["16", "32", "48", "40"] },
+  { label: "Seats up to", cells: ["16 guests", "32 guests", "48 guests", "40 guests"] },
+  { label: "Delivery & setup", cells: [true, true, true, true] },
+  { label: "Pickup & teardown", cells: [true, true, true, true] },
+];
+
+// [individualValue, bundlePrice] per column, same order as COLUMNS.
+const PRICING: [number, number][] = [
+  [323, 315],
+  [371, 365],
+  [419, 415],
+  [420, 350],
 ];
 
 const ADDONS = [
-  ["Extra chairs", "Add seating by the dozen", "$2.50 / day ea."],
+  ["Extra chairs", "Add seating by the dozen", "$2.00 / day ea."],
   ["Extra tables", "More room for food & gifts", "$8 / day ea."],
   ["Additional tent", "Double your covered space", "$300 / day"],
   ["Swap the bounce house", "Pick any inflatable in our lineup", "From $275 / day"],
@@ -86,7 +87,7 @@ export default async function BundlesPage() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
             <p className="eyebrow text-party-red">Side by side</p>
-            <h2 className="section-title mt-3">{COMPARISON.label}</h2>
+            <h2 className="section-title mt-3">{COMPARISON_LABEL}</h2>
             <p className="mt-4 text-lg text-party-ink/65">
               Every bundle includes delivery, setup, and pickup. Here's exactly
               what comes with each tier.
@@ -94,21 +95,21 @@ export default async function BundlesPage() {
           </div>
 
           <div className="reveal mt-10 overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse">
+            <table className="w-full min-w-[760px] border-collapse">
               <thead>
                 <tr>
-                  <th className="w-[34%] p-0 text-left" />
-                  {["Bronze", "Silver", "Gold"].map((t) => (
+                  <th className="w-[28%] p-0 text-left" />
+                  {COLUMNS.map((t, i) => (
                     <th
                       key={t}
-                      className={`rounded-t-xl px-4 py-4 text-center font-display text-2xl font-bold italic ${
-                        t === "Silver"
+                      className={`rounded-t-xl px-4 py-4 text-center font-display text-xl font-bold italic ${
+                        i === FEATURED_COL
                           ? "bg-party-red text-white"
                           : "bg-party-cream text-party-ink"
                       }`}
                     >
                       {t}
-                      {t === "Silver" && (
+                      {i === FEATURED_COL && (
                         <span className="mt-1 block text-xs font-semibold uppercase not-italic tracking-wider text-white/80">
                           Most popular
                         </span>
@@ -118,23 +119,24 @@ export default async function BundlesPage() {
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON.rows.map(([label, a, b, c], i) => (
+                {COMPARISON_ROWS.map((row, i) => (
                   <tr
                     key={i}
                     className="border-b border-party-ink/10 align-middle"
                   >
                     <td className="py-4 pr-4 font-display text-base font-semibold italic">
-                      {label}
+                      {row.label}
                     </td>
-                    <td className="px-4 py-4 text-center text-sm">
-                      <CellValue value={a} />
-                    </td>
-                    <td className="bg-party-red/5 px-4 py-4 text-center text-sm">
-                      <CellValue value={b} />
-                    </td>
-                    <td className="px-4 py-4 text-center text-sm">
-                      <CellValue value={c} />
-                    </td>
+                    {row.cells.map((cell, c) => (
+                      <td
+                        key={c}
+                        className={`px-4 py-4 text-center text-sm ${
+                          c === FEATURED_COL ? "bg-party-red/5" : ""
+                        }`}
+                      >
+                        <CellValue value={cell} />
+                      </td>
+                    ))}
                   </tr>
                 ))}
 
@@ -143,11 +145,11 @@ export default async function BundlesPage() {
                   <td className="py-4 pr-4 font-display text-base font-semibold italic">
                     Individual value
                   </td>
-                  {PRICING.map(([t, val]) => (
+                  {PRICING.map(([val], i) => (
                     <td
-                      key={t}
+                      key={i}
                       className={`px-4 py-4 text-center text-sm text-party-ink/50 line-through ${
-                        t === "Silver" ? "bg-party-red/5" : ""
+                        i === FEATURED_COL ? "bg-party-red/5" : ""
                       }`}
                     >
                       {money(val)}
@@ -158,11 +160,11 @@ export default async function BundlesPage() {
                   <td className="py-4 pr-4 font-display text-base font-semibold italic">
                     You save
                   </td>
-                  {PRICING.map(([t, val, price]) => (
+                  {PRICING.map(([val, price], i) => (
                     <td
-                      key={t}
+                      key={i}
                       className={`px-4 py-4 text-center text-sm font-bold text-party-green ${
-                        t === "Silver" ? "bg-party-red/5" : ""
+                        i === FEATURED_COL ? "bg-party-red/5" : ""
                       }`}
                     >
                       {money(val - price)}
@@ -173,11 +175,11 @@ export default async function BundlesPage() {
                   <td className="py-5 pr-4 font-display text-lg font-bold italic">
                     Bundle price
                   </td>
-                  {PRICING.map(([t, , price]) => (
+                  {PRICING.map(([, price], i) => (
                     <td
-                      key={t}
+                      key={i}
                       className={`px-4 py-5 text-center ${
-                        t === "Silver" ? "rounded-b-xl bg-party-red/5" : ""
+                        i === FEATURED_COL ? "rounded-b-xl bg-party-red/5" : ""
                       }`}
                     >
                       <div className="font-display text-2xl font-bold italic">
@@ -188,19 +190,16 @@ export default async function BundlesPage() {
                 </tr>
                 <tr>
                   <td />
-                  {bundles
-                    .slice()
-                    .sort((x, y) => x.bundle_price - y.bundle_price)
-                    .map((b) => (
-                      <td key={b.id} className="px-4 pt-4 text-center">
-                        <Link
-                          href={`/book?bundle=${b.id}`}
-                          className="btn-red btn-pill !px-5 !py-2.5 !text-sm"
-                        >
-                          Book {b.name?.split(" ")[0]}
-                        </Link>
-                      </td>
-                    ))}
+                  {bundles.map((b) => (
+                    <td key={b.id} className="px-4 pt-4 text-center">
+                      <Link
+                        href={`/book?bundle=${b.id}`}
+                        className="btn-red btn-pill !px-5 !py-2.5 !text-sm"
+                      >
+                        Book {b.name?.split(" ")[0]}
+                      </Link>
+                    </td>
+                  ))}
                 </tr>
               </tbody>
             </table>

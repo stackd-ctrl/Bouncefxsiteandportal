@@ -40,6 +40,16 @@ function collectUrls(body: any): unknown[] {
       }
     }
   }
+  for (const arr of [body.customProducts, body.customBundles]) {
+    if (Array.isArray(arr)) {
+      for (const o of arr) {
+        if (o) {
+          urls.push(o.image_url);
+          if (Array.isArray(o.images)) urls.push(...o.images);
+        }
+      }
+    }
+  }
   return urls;
 }
 
@@ -61,6 +71,9 @@ export async function POST(req: Request) {
     const merged = await writeContent({
       products: body.products,
       bundles: body.bundles,
+      customProducts: body.customProducts,
+      customBundles: body.customBundles,
+      leads: body.leads,
       site: body.site,
       media: body.media,
       pages: body.pages,

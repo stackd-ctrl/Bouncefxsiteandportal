@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { GALLERY } from "./data";
+import type { Product, Bundle } from "./types";
 import { createAdminSupabase, supabaseConfigured } from "./supabase/server";
 
 /**
@@ -20,6 +21,8 @@ export interface ProductOverride {
   image_url?: string;
   images?: string[];
   is_available?: boolean;
+  /** How many units Bounce FX owns (drives quantity-aware availability). */
+  quantity?: number;
 }
 
 export interface BundleOverride {
@@ -28,6 +31,20 @@ export interface BundleOverride {
   bundle_price?: number;
   image_url?: string;
   images?: string[];
+}
+
+/** A lead/customer record managed in the admin CRM. */
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  /** Simple pipeline stage. */
+  stage: "new" | "contacted" | "quoted" | "booked";
+  source: string;
+  notes: string;
+  archived?: boolean;
+  created_at: string;
 }
 
 export interface SiteInfo {
@@ -143,6 +160,12 @@ export interface PagesContent {
 export interface SiteContent {
   products: Record<string, ProductOverride>;
   bundles: Record<string, BundleOverride>;
+  /** Brand-new products the owner added in the admin (beyond the base catalog). */
+  customProducts: Product[];
+  /** Brand-new bundle packages the owner added in the admin. */
+  customBundles: Bundle[];
+  /** CRM leads/customers managed in the admin. */
+  leads: Lead[];
   site: SiteInfo;
   media: MediaInfo;
   pages: PagesContent;
@@ -361,7 +384,7 @@ export const DEFAULT_PAGES: PagesContent = {
     headerEyebrow: "Bundle & save",
     headerTitle: "Bundle Packages",
     headerSubtitle:
-      "One package, everything you need. Pick a tier and we'll bring the whole setup — seating, shade, and bounce.",
+      "One package, everything you need. Pick the size that fits your crew and we'll bring the whole setup — bounce house, seating, and shade.",
     faq: [
       {
         title: "Can I customize a bundle?",
@@ -406,6 +429,9 @@ function hydrate(parsed: Partial<SiteContent> | null): SiteContent {
   return {
     products: parsed?.products ?? {},
     bundles: parsed?.bundles ?? {},
+    customProducts: parsed?.customProducts ?? [],
+    customBundles: parsed?.customBundles ?? [],
+    leads: parsed?.leads ?? [],
     site: { ...DEFAULT_SITE, ...(parsed?.site ?? {}) },
     media: { ...DEFAULT_MEDIA, ...(parsed?.media ?? {}) },
     pages: hydratePages(parsed?.pages),
@@ -457,6 +483,11 @@ export async function writeContent(
   const merged: SiteContent = {
     products: { ...current.products, ...(next.products ?? {}) },
     bundles: { ...current.bundles, ...(next.bundles ?? {}) },
+    // Custom item lists are replaced wholesale — the admin always submits the
+    // full array when it adds/edits/deletes a custom product or bundle.
+    customProducts: next.customProducts ?? current.customProducts,
+    customBundles: next.customBundles ?? current.customBundles,
+    leads: next.leads ?? current.leads,
     site: { ...current.site, ...(next.site ?? {}) },
     media: { ...current.media, ...(next.media ?? {}) },
     pages: mergedPages as unknown as PagesContent,
@@ -480,6 +511,63 @@ export async function writeContent(
     /* read-only host — ephemeral prototype mode */
   }
   return merged;
+}
+
+/**
+ * Capture a website contact-form submission as a CRM lead. Deduped by email:
+ * a repeat inquiry appends a dated note to the existing lead instead of adding
+ * a duplicate row. Non-fatal — never block the contact form on a write error.
+ */
+export async function addLeadFromContact(input: {
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+}): Promise<void> {
+  try {
+    const current = await readContent();
+    const email = (input.email || "").trim();
+    const key = email.toLowerCase();
+    const today = new Date().toISOString().slice(0, 10);
+    const note = (input.message || "").trim();
+    const idx = key
+      ? current.leads.findIndex((l) => (l.email || "").toLowerCase() === key)
+      : -1;
+
+    let leads: Lead[];
+    if (idx >= 0) {
+      leads = current.leads.map((l, i) =>
+        i === idx
+          ? {
+              ...l,
+              phone: l.phone || input.phone || "",
+              notes: [l.notes, note && `[${today}] ${note}`]
+                .filter(Boolean)
+                .join("\n"),
+            }
+          : l
+      );
+    } else {
+      const id =
+        globalThis.crypto?.randomUUID?.() ?? `lead-${Date.now()}`;
+      leads = [
+        {
+          id,
+          name: input.name,
+          email,
+          phone: input.phone || "",
+          stage: "new",
+          source: "Contact form",
+          notes: note,
+          created_at: today,
+        },
+        ...current.leads,
+      ];
+    }
+    await writeContent({ leads });
+  } catch {
+    /* best-effort capture */
+  }
 }
 
 /** Convenience getters for non-product surfaces. */

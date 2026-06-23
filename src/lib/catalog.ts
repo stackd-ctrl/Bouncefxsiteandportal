@@ -15,11 +15,15 @@ import { readContent } from "./content";
 
 async function applyOverrides(products: Product[]): Promise<Product[]> {
   try {
-    const { products: overrides } = await readContent();
-    if (!overrides || Object.keys(overrides).length === 0) return products;
-    return products.map((p) =>
-      overrides[p.id] ? { ...p, ...overrides[p.id] } : p
-    );
+    const { products: overrides, customProducts } = await readContent();
+    const merged =
+      overrides && Object.keys(overrides).length > 0
+        ? products.map((p) =>
+            overrides[p.id] ? { ...p, ...overrides[p.id] } : p
+          )
+        : products;
+    // Owner-added products come after the base catalog.
+    return [...merged, ...(customProducts ?? [])];
   } catch {
     return products;
   }
@@ -42,11 +46,14 @@ export async function getProducts(): Promise<Product[]> {
 
 async function applyBundleOverrides(bundles: Bundle[]): Promise<Bundle[]> {
   try {
-    const { bundles: overrides } = await readContent();
-    if (!overrides || Object.keys(overrides).length === 0) return bundles;
-    return bundles.map((b) =>
-      overrides[b.id] ? { ...b, ...overrides[b.id] } : b
-    );
+    const { bundles: overrides, customBundles } = await readContent();
+    const merged =
+      overrides && Object.keys(overrides).length > 0
+        ? bundles.map((b) =>
+            overrides[b.id] ? { ...b, ...overrides[b.id] } : b
+          )
+        : bundles;
+    return [...merged, ...(customBundles ?? [])];
   } catch {
     return bundles;
   }

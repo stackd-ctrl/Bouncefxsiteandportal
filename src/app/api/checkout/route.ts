@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getProducts, getBundles } from "@/lib/catalog";
 import { getDeliveryQuote } from "@/lib/delivery";
-import { depositFor } from "@/lib/pricing";
+import {
+  depositFor,
+  amountDueNow,
+  paymentLabel,
+  type PaymentChoice,
+} from "@/lib/pricing";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { createAdminSupabase, supabaseConfigured } from "@/lib/supabase/server";
 
@@ -15,6 +20,8 @@ interface CheckoutBody {
   eventAddress: string;
   eventType: string;
   specialRequests?: string;
+  paymentChoice?: PaymentChoice;
+  amountToPay?: number;
 }
 
 export async function POST(req: Request) {
@@ -35,6 +42,8 @@ export async function POST(req: Request) {
     eventAddress,
     eventType,
     specialRequests = "",
+    paymentChoice = "deposit",
+    amountToPay,
   } = body;
 
   if (!eventDate || !customerName || !customerEmail || !eventAddress) {
@@ -81,6 +90,15 @@ export async function POST(req: Request) {
 
   const total = Math.round((subtotal + deliveryFee) * 100) / 100;
   const deposit = depositFor(total);
+  // Recompute the amount to charge now from the choice — clamped server-side.
+  const amountPaid = amountDueNow(total, paymentChoice, amountToPay);
+  const paymentType = paymentLabel(total, amountPaid); // Deposit | Partial payment | Paid in full
+  const payLineName =
+    amountPaid >= total
+      ? "Bounce FX — Full Payment"
+      : amountPaid <= deposit
+      ? "Bounce FX — Booking Deposit"
+      : "Bounce FX — Partial Payment";
 
   // ── Persist a pending booking (if Supabase is configured) ──
   let bookingId: string | null = null;
@@ -99,7 +117,7 @@ export async function POST(req: Request) {
           event_type: eventType,
           special_requests: specialRequests,
           total_amount: total,
-          deposit_amount: deposit,
+          deposit_amount: amountPaid,
           delivery_fee: deliveryFee,
           status: "pending",
         })
@@ -126,9 +144,9 @@ export async function POST(req: Request) {
             quantity: 1,
             price_data: {
               currency: "usd",
-              unit_amount: Math.round(deposit * 100),
+              unit_amount: Math.round(amountPaid * 100),
               product_data: {
-                name: "Bounce FX Booking Deposit ($50)",
+                name: payLineName,
                 description: lineLabels.join(", ").slice(0, 250),
               },
             },
@@ -138,8 +156,9 @@ export async function POST(req: Request) {
           booking_id: bookingId ?? "",
           event_date: eventDate,
           total_amount: String(total),
-          deposit_amount: String(deposit),
+          deposit_amount: String(amountPaid),
           delivery_fee: String(deliveryFee),
+          payment_type: paymentType,
         },
         success_url: `${siteUrl}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/book?canceled=1`,
@@ -171,9 +190,10 @@ export async function POST(req: Request) {
     name: customerName,
     date: eventDate,
     total: String(total),
-    deposit: String(deposit),
+    deposit: String(amountPaid),
     delivery: String(deliveryFee),
     items: lineLabels.join(" + "),
+    payType: paymentType,
   });
   return NextResponse.json({
     url: `${siteUrl}/book/confirmation?${params.toString()}`,

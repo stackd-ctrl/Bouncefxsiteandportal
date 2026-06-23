@@ -151,7 +151,7 @@ function answer(
   if (/(table|chair|seating|seat)/.test(t)) {
     return {
       reply:
-        "We've got 6ft heavy-duty banquet tables ($8/day) and white folding chairs ($2.50/day). A good rule: one table per 8 guests, one chair per guest.",
+        "We've got 6ft heavy-duty banquet tables ($8/day) and white folding chairs ($2.00/day). A good rule: one table per 8 guests, one chair per guest.",
       links: [{ label: "Shop tables & chairs", href: "/shop" }],
     };
   }

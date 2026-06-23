@@ -55,6 +55,12 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2">
           <Link
+            href="/checkout"
+            className="hidden btn-dark !px-5 !py-2.5 !text-sm sm:inline-flex"
+          >
+            Checkout
+          </Link>
+          <Link
             href="/availability"
             className="hidden btn-red !px-6 !py-2.5 !text-sm sm:inline-flex"
           >
@@ -82,7 +88,10 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <Link href="/availability" className="btn-red mt-4">
+            <Link href="/book" className="btn-dark mt-4">
+              Checkout
+            </Link>
+            <Link href="/availability" className="btn-red mt-3">
               Book Now
             </Link>
           </nav>

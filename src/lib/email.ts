@@ -5,6 +5,9 @@ const key = process.env.RESEND_API_KEY;
 const from =
   process.env.RESEND_FROM_EMAIL ||
   "Bounce FX <bookings@bouncefxpartyrentals.com>";
+// Where customer replies land — the real, monitored business inbox (Google
+// Workspace), so a reply to an automated email reaches Bounce FX.
+const replyTo = process.env.REPLY_TO_EMAIL || "Info@bouncefxpartyrentals.com";
 
 export const emailConfigured = Boolean(key);
 
@@ -60,6 +63,7 @@ export async function sendBookingConfirmation(b: BookingEmail) {
     await resend.emails.send({
       from,
       to: b.to,
+      replyTo,
       subject: `🎉 Your Bounce FX booking is confirmed for ${prettyDate(
         b.eventDate
       )}`,

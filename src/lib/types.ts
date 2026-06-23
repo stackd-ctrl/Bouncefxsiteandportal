@@ -35,6 +35,8 @@ export interface Bundle {
   bundle_price: number;
   individual_value: number;
   tier?: "bronze" | "silver" | "gold";
+  /** Optional marketing flag shown as a corner badge, e.g. "Highly Requested". */
+  badge?: string;
   highlights?: string[];
   /** Optional primary photo for the bundle. */
   image_url?: string;

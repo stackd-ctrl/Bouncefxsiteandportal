@@ -29,6 +29,9 @@ export default async function AdminPage() {
       bookings={bookings}
       products={products}
       bundles={bundles}
+      customProducts={content.customProducts}
+      customBundles={content.customBundles}
+      leads={content.leads}
       site={content.site}
       media={content.media}
       pages={content.pages}

@@ -1,9 +1,8 @@
 import type { Booking } from "./types";
-import { DEMO_BOOKINGS } from "./demo-bookings";
 import { createAdminSupabase, supabaseConfigured } from "./supabase/server";
 
 export async function getBookings(): Promise<Booking[]> {
-  if (!supabaseConfigured) return DEMO_BOOKINGS;
+  if (!supabaseConfigured) return [];
   try {
     const supabase = createAdminSupabase();
     const { data, error } = await supabase

@@ -3,29 +3,90 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Booking, Product, Bundle } from "@/lib/types";
-import type { SiteInfo, MediaInfo, PagesContent } from "@/lib/content";
+import type { SiteInfo, MediaInfo, PagesContent, Lead } from "@/lib/content";
 import AdminDashboard from "./AdminDashboard";
+import CustomersPanel from "./admin/CustomersPanel";
 import ProductsPanel from "./admin/ProductsPanel";
 import BundlesPanel from "./admin/BundlesPanel";
 import MediaPanel from "./admin/MediaPanel";
 import PagesPanel from "./admin/PagesPanel";
 import SettingsPanel from "./admin/SettingsPanel";
 
-type Tab = "bookings" | "products" | "bundles" | "media" | "pages" | "settings";
+type Tab =
+  | "bookings"
+  | "customers"
+  | "products"
+  | "bundles"
+  | "media"
+  | "pages"
+  | "settings";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "bookings", label: "Bookings" },
-  { key: "products", label: "Products" },
-  { key: "bundles", label: "Bundles" },
-  { key: "media", label: "Media" },
-  { key: "pages", label: "Pages" },
-  { key: "settings", label: "Settings" },
+const NAV: { key: Tab; label: string; icon: JSX.Element; desc: string }[] = [
+  {
+    key: "bookings",
+    label: "Bookings",
+    desc: "Customer orders",
+    icon: (
+      <path d="M8 2v3M16 2v3M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+    ),
+  },
+  {
+    key: "customers",
+    label: "Customers",
+    desc: "Leads & contacts",
+    icon: (
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11" />
+    ),
+  },
+  {
+    key: "products",
+    label: "Products",
+    desc: "Catalog & inventory",
+    icon: (
+      <path d="M3.3 7 12 12l8.7-5M12 22V12M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+    ),
+  },
+  {
+    key: "bundles",
+    label: "Bundles",
+    desc: "Package deals",
+    icon: (
+      <path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z" />
+    ),
+  },
+  {
+    key: "media",
+    label: "Media",
+    desc: "Photos & logo",
+    icon: (
+      <path d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6M8.5 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z" />
+    ),
+  },
+  {
+    key: "pages",
+    label: "Pages",
+    desc: "Website copy",
+    icon: (
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h6" />
+    ),
+  },
+  {
+    key: "settings",
+    label: "Settings",
+    desc: "Business info",
+    icon: (
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.81 1.17V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 7 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 2.6 14H2.5a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 2.5V2.4a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9h.1a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+    ),
+  },
 ];
 
 export default function AdminPortal({
   bookings,
   products,
   bundles,
+  customProducts,
+  customBundles,
+  leads,
   site,
   media,
   pages,
@@ -35,6 +96,9 @@ export default function AdminPortal({
   bookings: Booking[];
   products: Product[];
   bundles: Bundle[];
+  customProducts: Product[];
+  customBundles: Bundle[];
+  leads: Lead[];
   site: SiteInfo;
   media: MediaInfo;
   pages: PagesContent;
@@ -42,66 +106,102 @@ export default function AdminPortal({
   email: string | null;
 }) {
   const [tab, setTab] = useState<Tab>("bookings");
+  const current = NAV.find((n) => n.key === tab)!;
 
   return (
-    <div className="min-h-screen bg-party-cream">
-      {/* Top bar */}
-      <header className="border-b border-party-ink/15 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="flex items-baseline gap-2">
-            <span className="font-display text-xl font-bold italic">
-              Bounce FX
-            </span>
-            <span className="font-display text-xl font-medium italic text-party-ink/50">
-              Admin
-            </span>
-          </Link>
-          <div className="flex items-center gap-3 text-sm">
-            {email && (
-              <span className="hidden text-party-ink/60 sm:inline">{email}</span>
-            )}
-            <Link href="/" className="btn-white !px-4 !py-2 !text-sm">
-              View Site
-            </Link>
+    <div className="min-h-screen bg-gray-100 text-gray-800 lg:flex">
+      {/* Sidebar */}
+      <aside className="border-b border-gray-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
+        <div className="flex items-center gap-2 px-5 py-5">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-party-red text-sm font-bold text-white">
+            FX
+          </span>
+          <div className="leading-tight">
+            <p className="text-sm font-bold text-gray-900">Bounce FX</p>
+            <p className="text-xs text-gray-500">Admin Console</p>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mx-auto flex max-w-7xl gap-6 px-4 sm:px-6">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`tab ${tab === t.key ? "tab-active" : ""}`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </header>
+        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0">
+          {NAV.map((n) => {
+            const active = tab === n.key;
+            return (
+              <button
+                key={n.key}
+                onClick={() => setTab(n.key)}
+                className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors lg:w-full ${
+                  active
+                    ? "bg-party-red/10 text-party-red"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {n.icon}
+                </svg>
+                {n.label}
+              </button>
+            );
+          })}
+        </nav>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        {demo && (
-          <p className="mb-6 rounded-lg border border-party-yellow/60 bg-party-yellow/25 px-4 py-3 text-sm font-semibold">
-            Prototype mode — explore freely! You can edit and upload, but changes
-            are session-only and won't be saved (connect Supabase to make edits
-            stick). Bookings shown are sample data.
-          </p>
-        )}
-        {tab === "bookings" && (
-          <AdminDashboard
-            bookings={bookings}
-            products={products}
-            demo={demo}
-            email={email}
-          />
-        )}
-        {tab === "products" && <ProductsPanel products={products} />}
-        {tab === "bundles" && <BundlesPanel bundles={bundles} />}
-        {tab === "media" && <MediaPanel media={media} />}
-        {tab === "pages" && <PagesPanel pages={pages} site={site} />}
-        {tab === "settings" && <SettingsPanel site={site} />}
-      </div>
+        <div className="hidden border-t border-gray-200 p-4 lg:block">
+          {email && (
+            <p className="truncate text-xs text-gray-500">{email}</p>
+          )}
+          <Link
+            href="/"
+            className="mt-2 inline-block text-sm font-semibold text-party-red hover:underline"
+          >
+            View live site →
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <main className="min-w-0 flex-1">
+        <header className="flex items-center justify-between gap-4 border-b border-gray-200 bg-white px-5 py-4 sm:px-8">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">{current.label}</h1>
+            <p className="text-xs text-gray-500">{current.desc}</p>
+          </div>
+          <Link
+            href="/"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 lg:hidden"
+          >
+            View site
+          </Link>
+        </header>
+
+        <div className="p-5 sm:p-8">
+          {tab === "bookings" && (
+            <AdminDashboard bookings={bookings} products={products} email={email} />
+          )}
+          {tab === "customers" && (
+            <CustomersPanel leads={leads} bookings={bookings} />
+          )}
+          {tab === "products" && (
+            <ProductsPanel products={products} customProducts={customProducts} />
+          )}
+          {tab === "bundles" && (
+            <BundlesPanel
+              bundles={bundles}
+              customBundles={customBundles}
+              products={products}
+            />
+          )}
+          {tab === "media" && <MediaPanel media={media} />}
+          {tab === "pages" && <PagesPanel pages={pages} site={site} />}
+          {tab === "settings" && <SettingsPanel site={site} />}
+        </div>
+      </main>
     </div>
   );
 }

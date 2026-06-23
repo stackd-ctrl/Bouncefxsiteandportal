@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendContactMessage } from "@/lib/email";
+import { addLeadFromContact } from "@/lib/content";
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +19,8 @@ export async function POST(req: Request) {
       eventDate: body.eventDate,
       message,
     });
+    // Also capture the inquiry as a CRM lead so it shows up in Customers.
+    await addLeadFromContact({ name, email, phone: body.phone, message });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(

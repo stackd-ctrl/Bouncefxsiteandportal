@@ -17,6 +17,7 @@ interface Summary {
   delivery: number;
   items: string;
   email?: string;
+  payType?: string;
 }
 
 export default async function ConfirmationPage({
@@ -31,6 +32,7 @@ export default async function ConfirmationPage({
     deposit?: string;
     delivery?: string;
     items?: string;
+    payType?: string;
   };
 }) {
   let summary: Summary | null = null;
@@ -50,6 +52,7 @@ export default async function ConfirmationPage({
         deposit: Number(m.deposit_amount ?? (session.amount_total ?? 0) / 100),
         delivery: Number(m.delivery_fee ?? 0),
         items: "your selected rentals",
+        payType: m.payment_type,
       };
     } catch {
       summary = null;
@@ -62,6 +65,7 @@ export default async function ConfirmationPage({
       deposit: Number(searchParams.deposit ?? 0),
       delivery: Number(searchParams.delivery ?? 0),
       items: searchParams.items ?? "your selected rentals",
+      payType: searchParams.payType,
     };
   }
 
@@ -79,7 +83,7 @@ export default async function ConfirmationPage({
         </h1>
         <p className="mt-4 text-lg text-white/90">
           {summary
-            ? `Thanks ${summary.name}! Your deposit is in and your party is officially on the calendar.`
+            ? `Thanks ${summary.name}! Your payment is in and your party is officially on the calendar.`
             : "Your booking request was received — we'll be in touch shortly to confirm the details."}
         </p>
 
@@ -98,12 +102,12 @@ export default async function ConfirmationPage({
               <div className="my-2 border-t border-dashed border-party-ink/15" />
               <SummaryRow label="Total" value={money(summary.total)} bold />
               <div className="flex justify-between rounded-lg bg-party-green/15 px-3 py-2 font-display font-bold text-party-green">
-                <span>Deposit paid</span>
+                <span>{summary.payType ?? "Paid"}</span>
                 <span>{money(summary.deposit)}</span>
               </div>
               <SummaryRow
                 label="Balance due on event day"
-                value={money(remaining)}
+                value={remaining > 0 ? money(remaining) : "Paid in full"}
               />
             </div>
             {summary.email && (

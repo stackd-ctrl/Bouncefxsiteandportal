@@ -345,7 +345,7 @@ export default function PagesPanel({
 
       {SECTIONS.filter((s) => s.id === open).map((section) => (
         <div key={section.id} className="rounded-2xl bg-white p-6 shadow-soft">
-          <h3 className="font-display text-xl font-bold italic">
+          <h3 className="text-lg font-bold text-gray-900">
             {section.label}
           </h3>
           {section.blurb && (

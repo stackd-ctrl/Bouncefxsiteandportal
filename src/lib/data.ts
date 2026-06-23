@@ -71,7 +71,7 @@ export const PRODUCTS: Product[] = [
     name: "White Folding Chair Heavy Duty",
     description:
       "Clean white heavy-duty folding chairs rated for everyday event use. Comfortable, stackable, and crisp — order as many as you need.",
-    price_per_day: 2.5,
+    price_per_day: 2.0,
     category: "chair",
     image_url:
       "/products/chair.png",
@@ -100,90 +100,79 @@ PRODUCTS.forEach((p) => {
   }
 });
 
+// Bundle contents & pricing supplied by the client (2026-06-22). `individual_value`
+// is the true à-la-carte total of the included items at our per-day rates
+// (bounce house $275, 6ft table $8, chair $2.00, 20x20 tent $300), so the
+// "you save" figure on each card is real, not estimated.
+const BOUNCE = "33333333-3333-4333-8333-333333333333";
+const TABLE = "44444444-4444-4444-8444-444444444444";
+const CHAIR = "66666666-6666-4666-8666-666666666666";
+const TENT = "55555555-5555-4555-8555-555555555555";
+
 export const BUNDLES: Bundle[] = [
   {
     id: "b1111111-1111-4111-8111-111111111111",
-    name: "Bronze Bundle",
+    name: "Small Party Package",
     tier: "bronze",
     description:
-      "The essentials done right. Seating and tables for an intimate gathering of up to 50 guests — just add cake.",
-    product_ids: [
-      "44444444-4444-4444-8444-444444444444",
-      "66666666-6666-4666-8666-666666666666",
-    ],
-    bundle_price: 175,
-    individual_value: 215,
+      "The perfect starter setup for an intimate backyard celebration — one bounce house plus seating for a small crew.",
+    product_ids: [BOUNCE, TABLE, CHAIR],
+    bundle_price: 315,
+    individual_value: 323, // 275 + 2×8 + 16×2.00
     highlights: [
-      "50 white heavy-duty folding chairs",
-      "8 six-foot banquet tables",
+      "1 bounce house",
+      "2 banquet tables",
+      "16 folding chairs",
       "Delivery, setup & pickup included",
-      "Seats up to 50 guests",
     ],
   },
   {
     id: "b2222222-2222-4222-8222-222222222222",
-    name: "Silver Bundle",
+    name: "Medium Party Package",
     tier: "silver",
     description:
-      "Shade and seating for the full crew. Add our premium high-peak tent to the seating package and keep the party comfortable all day.",
-    product_ids: [
-      "44444444-4444-4444-8444-444444444444",
-      "66666666-6666-4666-8666-666666666666",
-      "55555555-5555-4555-8555-555555555555",
-    ],
-    bundle_price: 425,
-    individual_value: 515,
+      "Our most popular package — a bounce house with double the seating for a full guest list.",
+    product_ids: [BOUNCE, TABLE, CHAIR],
+    bundle_price: 365,
+    individual_value: 371, // 275 + 4×8 + 32×2.00
     highlights: [
-      "Everything in Bronze",
-      "20x20 premium high-peak party tent",
-      "Rain-or-shine coverage",
-      "Seats up to 60 guests",
+      "1 bounce house",
+      "4 banquet tables",
+      "32 folding chairs",
+      "Delivery, setup & pickup included",
     ],
   },
   {
     id: "b3333333-3333-4333-8333-333333333333",
-    name: "Gold Bundle",
+    name: "Large Party Package",
     tier: "gold",
     description:
-      "The full Bounce FX experience. Seating, tables, a tent, AND a headline bounce house — everything you need for an unforgettable event.",
-    product_ids: [
-      "44444444-4444-4444-8444-444444444444",
-      "66666666-6666-4666-8666-666666666666",
-      "55555555-5555-4555-8555-555555555555",
-      "33333333-3333-4333-8333-333333333333",
-    ],
-    bundle_price: 675,
-    individual_value: 790,
+      "Go big. A bounce house plus seating for a large gathering — built for block parties and big celebrations.",
+    product_ids: [BOUNCE, TABLE, CHAIR],
+    bundle_price: 415,
+    individual_value: 419, // 275 + 6×8 + 48×2.00
     highlights: [
-      "Everything in Silver",
-      "Grand Party Dome 20x20 bounce house",
-      "The total all-in-one party setup",
-      "Built for big celebrations",
+      "1 bounce house",
+      "6 banquet tables",
+      "48 folding chairs",
+      "Delivery, setup & pickup included",
     ],
   },
-];
-
-export const TESTIMONIALS = [
   {
-    name: "Maya R.",
-    role: "Birthday party · Stafford, VA",
-    quote:
-      "The dual lane slide was the hit of my son's party — kids didn't stop for three hours straight! Setup was fast and the team was so friendly.",
-    color: "party.red",
-  },
-  {
-    name: "Pastor James W.",
-    role: "Church fall festival · Fredericksburg",
-    quote:
-      "We rented the big dome and two tents for our festival. On time, spotless, and stress-free from start to finish. We'll be back every year.",
-    color: "party.blue",
-  },
-  {
-    name: "Danielle K.",
-    role: "Corporate family day · Spotsylvania",
-    quote:
-      "Booking online with the deposit was so easy, and the delivery calculator told us the cost up front. Professional, fun, and zero surprises.",
-    color: "party.green",
+    id: "b4444444-4444-4444-8444-444444444444",
+    name: "Tent Bundle Deal",
+    badge: "Highly Requested",
+    description:
+      "Shade-first setup. A 20x20 high-peak tent with tables and chairs to keep everyone comfortable rain or shine.",
+    product_ids: [TENT, TABLE, CHAIR],
+    bundle_price: 350,
+    individual_value: 420, // 300 + 5×8 + 40×2.00
+    highlights: [
+      "20x20 high-peak party tent",
+      "5 banquet tables",
+      "40 folding chairs",
+      "Delivery, setup & pickup included",
+    ],
   },
 ];
 
@@ -207,62 +196,58 @@ export const CATEGORIES: { key: string; label: string; emoji: string }[] = [
   { key: "bundle", label: "Bundles", emoji: "🎁" },
 ];
 
-export const REVIEWS = [
+export type Review = {
+  id: string;
+  name: string;
+  rating: number;
+  text: string;
+  /** Reviewer context as shown on Google, e.g. "Local Guide · 14 reviews". */
+  meta?: string;
+  date: string; // ISO
+};
+
+// Real Google reviews (5.0 ★ from 4 reviews) from the Bounce FX Google Business
+// profile, captured 2026-06-22. To add a new one, copy the reviewer's name,
+// star count, text and date here.
+export const REVIEWS: Review[] = [
   {
-    id: "r1",
-    name: "Maya R.",
+    id: "g-kmos",
+    name: "K Mos",
     rating: 5,
-    text: "The dual lane slide was the hit of my son's party — kids didn't stop for three hours straight! Setup was fast and the team was so friendly.",
-    event_type: "Birthday",
-    city: "Stafford, VA",
-    date: "2026-05-18",
+    text: "10/10 would recommend! Professional, reasonably priced and on-time services. The customer service was phenomenal! I was hesitant and didn't know what I wanted, and he was so patient with me. I will definitely not hesitate to use them for all of my family's needs.",
+    meta: "4 reviews · Google",
+    date: "2026-06-18",
   },
   {
-    id: "r2",
-    name: "Pastor James W.",
+    id: "g-anne-ashley",
+    name: "Anne Ashley",
     rating: 5,
-    text: "We rented the Grand Dome and two tents for our fall festival. On time, spotless, and stress-free from start to finish. We'll be back every year.",
-    event_type: "Church",
-    city: "Fredericksburg, VA",
-    date: "2026-05-02",
+    text: "I had the opportunity to use Bounce FX Party Rentals for my son's birthday celebration and I was so impressed! The team was so professional! My son and his friends had a wonderful time. I would utilize their services again!",
+    meta: "3 reviews · Google",
+    date: "2026-06-18",
   },
   {
-    id: "r3",
-    name: "Danielle K.",
+    id: "g-full-life-journey",
+    name: "Full Life Journey",
     rating: 5,
-    text: "Booking online with the deposit was so easy, and the delivery calculator told us the cost up front. Professional, fun, and zero surprises.",
-    event_type: "Corporate",
-    city: "Spotsylvania, VA",
-    date: "2026-04-21",
+    text: "The service was great. Easy to reserve. Delivery was on time. Bounce house was clean and in great shape. Pickup was done as scheduled and the area was left clean.",
+    meta: "3 reviews · Google",
+    date: "2026-06-18",
   },
   {
-    id: "r4",
-    name: "Tonya B.",
+    id: "g-keshaun-clark",
+    name: "Keshaun Clark",
     rating: 5,
-    text: "Our HOA block party was a blast. The chairs and tables showed up clean and early, and pickup was just as smooth. Highly recommend!",
-    event_type: "Community",
-    city: "Woodbridge, VA",
-    date: "2026-04-09",
-  },
-  {
-    id: "r5",
-    name: "Marcus & Lena",
-    rating: 5,
-    text: "Purplish combo was gorgeous and the kids loved the water slide. Communication was great the whole way. Worth every penny.",
-    event_type: "Birthday",
-    city: "King George, VA",
-    date: "2026-03-30",
-  },
-  {
-    id: "r6",
-    name: "Coach Rivera",
-    rating: 5,
-    text: "Used Bounce FX for our school field day — they handled a big setup like pros and the kids had the best day. Booking again next year.",
-    event_type: "School",
-    city: "Fredericksburg, VA",
-    date: "2026-03-15",
+    text: "I cannot say enough great things about this company!",
+    meta: "Local Guide · 14 reviews · Google",
+    date: "2026-06-18",
   },
 ];
+
+// Link out to the Bounce FX Google reviews. TODO: swap for the exact Google Maps
+// profile URL (or "write a review" deep link) once the client provides it.
+export const GOOGLE_REVIEWS_URL =
+  "https://www.google.com/search?q=Bounce+FX+Party+Rentals+Fredericksburg+VA+reviews";
 
 export function getProductById(id: string): Product | undefined {
   return PRODUCTS.find((p) => p.id === id);
