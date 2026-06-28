@@ -6,6 +6,9 @@ import { getProducts } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import { money } from "@/lib/format";
 
+// Keep the live catalog fresh without a redeploy (see shop/page.tsx).
+export const revalidate = 60;
+
 export function generateStaticParams() {
   return CITIES.map((c) => ({ city: c.slug }));
 }
@@ -18,8 +21,8 @@ export function generateMetadata({
   const city = getCity(params.city);
   if (!city) return { title: "Service Area" };
   return {
-    title: `Bounce House & Party Rentals in ${city.name}, VA`,
-    description: `Bounce houses, water slides, tents, tables and chairs for rent in ${city.name}, VA. Delivery, setup and pickup included. ${
+    title: `Bounce House & Party Rentals in ${city.name}, ${city.state}`,
+    description: `Bounce houses, water slides, tents, tables and chairs for rent in ${city.name}, ${city.state}. Delivery, setup and pickup included. ${
       city.freeDelivery ? "Free local delivery." : "Low flat-rate delivery."
     } Book online with Bounce FX.`,
     alternates: { canonical: `/party-rentals/${city.slug}` },
@@ -44,7 +47,7 @@ export default async function CityPage({
     <>
       <section className="bg-party-red text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
-          <p className="eyebrow text-white/80">Now serving {city.name}, VA</p>
+          <p className="eyebrow text-white/80">Now serving {city.name}, {city.state}</p>
           <h1 className="mt-4 max-w-4xl font-display text-5xl font-bold italic leading-[0.95] sm:text-6xl md:text-7xl">
             Bounce House &amp; Party Rentals in {city.name}
           </h1>
@@ -91,7 +94,7 @@ export default async function CityPage({
                 href={`/party-rentals/${c.slug}`}
                 className="rounded-full border border-party-ink/20 px-4 py-2 text-sm font-semibold transition-colors hover:bg-party-cream"
               >
-                {c.name}, VA
+                {c.name}, {c.state}
               </Link>
             ))}
           </div>

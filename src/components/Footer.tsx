@@ -90,16 +90,36 @@ export default function Footer({
         {/* Service areas (SEO internal links) */}
         <div className="mt-12 border-t border-party-ink/15 pt-6">
           <h4 className="eyebrow text-party-red">Service areas</h4>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm font-semibold">
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm font-semibold">
             {CITIES.map((c) => (
               <Link
                 key={c.slug}
                 href={`/party-rentals/${c.slug}`}
                 className="hover:text-party-red"
               >
-                {c.name}, VA
+                {c.name}, {c.state}
               </Link>
             ))}
+            <span className="text-party-ink/60">&amp; more</span>
+          </div>
+
+          {/* "Does this serve my area?" — link + check button */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Link
+              href="/#delivery"
+              className="font-display text-lg font-bold italic underline decoration-2 underline-offset-4 hover:text-party-red"
+            >
+              Does this serve my area?
+            </Link>
+            <Link
+              href="/#delivery"
+              className="inline-flex items-center gap-1.5 rounded-full bg-party-ink px-5 py-2 text-sm font-bold uppercase tracking-wider text-party-yellow transition-colors hover:bg-party-red hover:text-white"
+            >
+              Check to see →
+            </Link>
+            <span className="text-xs text-party-ink/60">
+              We deliver up to ~100 miles from Fredericksburg.
+            </span>
           </div>
         </div>
       </div>

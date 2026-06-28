@@ -63,6 +63,8 @@ export async function POST(req: Request) {
             total: Number(booking.total_amount),
             deposit: Number(booking.deposit_amount),
             deliveryFee: Number(booking.delivery_fee),
+            confirmationNumber: booking.confirmation_number ?? undefined,
+            orderNumber: booking.order_number ?? undefined,
           });
         }
       } catch {
@@ -78,6 +80,8 @@ export async function POST(req: Request) {
         total: Number(meta.total_amount ?? 0),
         deposit: Number(meta.deposit_amount ?? 0),
         deliveryFee: Number(meta.delivery_fee ?? 0),
+        confirmationNumber: meta.confirmation_number || undefined,
+        orderNumber: meta.order_number || undefined,
       });
     }
   }

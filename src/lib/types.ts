@@ -14,6 +14,8 @@ export interface Product {
   quantity?: number;
   /** Footprint in feet [width, depth] — powers the space/fit checker. */
   footprint?: [number, number];
+  /** Inflated/standing height in feet — used for indoor ceiling clearance. */
+  height?: number;
   created_at?: string;
 }
 
@@ -37,6 +39,10 @@ export interface Bundle {
   tier?: "bronze" | "silver" | "gold";
   /** Optional marketing flag shown as a corner badge, e.g. "Highly Requested". */
   badge?: string;
+  /** Badge lettering color (hex). Defaults to white. */
+  badge_color?: string;
+  /** Badge background color (hex). Defaults to the brand red. */
+  badge_bg?: string;
   highlights?: string[];
   /** Optional primary photo for the bundle. */
   image_url?: string;
@@ -49,6 +55,10 @@ export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
 
 export interface Booking {
   id: string;
+  /** Sequential, human-friendly order number (auto-assigned by the DB). */
+  order_number?: number;
+  /** Random customer-facing confirmation code, e.g. "BFX-1A2B3C4D". */
+  confirmation_number?: string;
   product_ids: string[];
   event_date: string;
   customer_name: string;

@@ -37,6 +37,9 @@ export default async function AdminPage() {
       pages={content.pages}
       demo={session.demo}
       email={session.email}
+      isOwner={session.isOwner}
+      admins={content.admins}
+      ownerEmail={process.env.ADMIN_EMAIL?.toLowerCase() ?? null}
     />
   );
 }

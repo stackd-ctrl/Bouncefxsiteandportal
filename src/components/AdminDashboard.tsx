@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Booking, BookingStatus, Product } from "@/lib/types";
+import type { Lead } from "@/lib/content";
 import { money, prettyDate, todayISO } from "@/lib/format";
 import { paymentLabel } from "@/lib/pricing";
+import NewBookingForm from "./admin/NewBookingForm";
 
 type Row = Booking & { archived?: boolean };
 
@@ -22,6 +24,7 @@ const STATUSES: BookingStatus[] = [
 ];
 
 type SortKey =
+  | "order_number"
   | "customer_name"
   | "event_date"
   | "event_type"
@@ -82,13 +85,31 @@ function parseLine(line: string): string[] {
 export default function AdminDashboard({
   bookings: initial,
   products = [],
+  leads = [],
   email,
+  focusBookingId = null,
+  onFocusConsumed,
+  onOpenCustomer,
 }: {
   bookings: Booking[];
   products?: Product[];
+  leads?: Lead[];
   email: string | null;
+  focusBookingId?: string | null;
+  onFocusConsumed?: () => void;
+  onOpenCustomer?: (email: string) => void;
 }) {
   const [rows, setRows] = useState<Row[]>(initial);
+  const [creating, setCreating] = useState(false);
+
+  // Open a specific booking when navigated here from another tab.
+  useEffect(() => {
+    if (!focusBookingId) return;
+    const row = rows.find((r) => r.id === focusBookingId);
+    if (row) setEditing(row);
+    onFocusConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusBookingId]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all"); // all | <status> | archived
   const [sortKey, setSortKey] = useState<SortKey>("event_date");
@@ -131,9 +152,13 @@ export default function AdminDashboard({
       if (sortKey === "balance") {
         av = balanceOf(a);
         bv = balanceOf(b);
-      } else if (sortKey === "total_amount" || sortKey === "deposit_amount") {
-        av = Number(a[sortKey]);
-        bv = Number(b[sortKey]);
+      } else if (
+        sortKey === "total_amount" ||
+        sortKey === "deposit_amount" ||
+        sortKey === "order_number"
+      ) {
+        av = Number(a[sortKey] ?? 0);
+        bv = Number(b[sortKey] ?? 0);
       } else {
         av = String(a[sortKey] ?? "").toLowerCase();
         bv = String(b[sortKey] ?? "").toLowerCase();
@@ -173,6 +198,20 @@ export default function AdminDashboard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, archived }),
+      });
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function deleteBooking(id: string) {
+    setRows((rs) => rs.filter((r) => r.id !== id));
+    setEditing(null);
+    try {
+      await fetch("/api/admin/booking-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
       });
     } catch {
       /* ignore */
@@ -302,6 +341,14 @@ export default function AdminDashboard({
 
   return (
     <div className="space-y-6">
+      {creating && (
+        <NewBookingForm
+          products={products}
+          leads={leads}
+          onClose={() => setCreating(false)}
+        />
+      )}
+
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {STAT_CARDS.map((s) => (
@@ -319,6 +366,12 @@ export default function AdminDashboard({
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => setCreating(true)}
+          className="btn-red !px-4 !py-2 !text-sm"
+        >
+          + New booking
+        </button>
         <div className="relative min-w-[200px] flex-1">
           <input
             value={search}
@@ -370,6 +423,7 @@ export default function AdminDashboard({
         <table className="w-full min-w-[820px] text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+              <Th label="Order" k="order_number" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <Th label="Customer" k="customer_name" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <Th label="Event date" k="event_date" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <Th label="Type" k="event_type" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
@@ -384,7 +438,7 @@ export default function AdminDashboard({
           <tbody>
             {view.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={10} className="px-4 py-12 text-center text-gray-500">
                   {rows.length === 0
                     ? "No bookings yet. They'll appear here as customers book online."
                     : "No bookings match your filters."}
@@ -398,10 +452,23 @@ export default function AdminDashboard({
                   key={b.id}
                   className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <p className="font-semibold text-gray-900">
-                      {b.customer_name}
+                      {b.order_number != null ? `#${b.order_number}` : "—"}
                     </p>
+                    {b.confirmation_number && (
+                      <p className="text-xs text-gray-500">
+                        {b.confirmation_number}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setEditing(b)}
+                      className="text-left font-semibold text-gray-900 hover:text-party-red hover:underline"
+                    >
+                      {b.customer_name || "(no name)"}
+                    </button>
                     <p className="text-xs text-gray-500">{b.customer_email}</p>
                   </td>
                   <td className="px-4 py-3 text-gray-700">
@@ -492,6 +559,9 @@ export default function AdminDashboard({
           saving={savingEdit}
           onClose={() => setEditing(null)}
           onSave={saveEdit}
+          onArchive={(b) => setArchived(b.id, !b.archived)}
+          onDelete={(b) => deleteBooking(b.id)}
+          onOpenCustomer={onOpenCustomer}
         />
       )}
     </div>
@@ -536,13 +606,20 @@ function EditDrawer({
   saving,
   onClose,
   onSave,
+  onArchive,
+  onDelete,
+  onOpenCustomer,
 }: {
   booking: Row;
   saving: boolean;
   onClose: () => void;
   onSave: (b: Row) => void;
+  onArchive: (b: Row) => void;
+  onDelete: (b: Row) => void;
+  onOpenCustomer?: (email: string) => void;
 }) {
   const [d, setD] = useState<Row>(booking);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   function set(patch: Partial<Row>) {
     setD((cur) => ({ ...cur, ...patch }));
   }
@@ -564,6 +641,30 @@ function EditDrawer({
             ✕
           </button>
         </div>
+        {/* Booking summary */}
+        <div className="border-b border-gray-200 bg-gray-50 px-5 py-3 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {d.order_number != null && (
+              <span className="font-semibold text-gray-900">
+                Order #{d.order_number}
+              </span>
+            )}
+            {d.confirmation_number && <span>{d.confirmation_number}</span>}
+            <span>{d.product_ids?.length ?? 0} item(s)</span>
+            <span className="font-semibold text-gray-900">
+              {money(Number(d.total_amount))}
+            </span>
+          </div>
+          {d.customer_email && onOpenCustomer && (
+            <button
+              onClick={() => onOpenCustomer(d.customer_email)}
+              className="mt-1 text-sm font-semibold text-party-red hover:underline"
+            >
+              View customer profile →
+            </button>
+          )}
+        </div>
+
         <div className="space-y-4 p-5">
           <div>
             <label className={labelCls}>Customer name</label>
@@ -661,23 +762,59 @@ function EditDrawer({
               >
                 View agreement PDF
               </a>
+              <button
+                onClick={() => onArchive(d)}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                {d.archived ? "Restore" : "Archive"}
+              </button>
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onSave(d)}
-            disabled={saving}
-            className="rounded-lg bg-party-red px-4 py-2 text-sm font-semibold text-white hover:bg-party-red/90 disabled:opacity-50"
-          >
-            {saving ? "Saving…" : "Save changes"}
-          </button>
+        <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-5 py-4">
+          <div>
+            {confirmDelete ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-party-red">
+                  Delete permanently?
+                </span>
+                <button
+                  onClick={() => onDelete(d)}
+                  className="rounded-lg bg-party-red px-3 py-2 text-xs font-semibold text-white hover:bg-party-red/90"
+                >
+                  Yes, delete
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="rounded-lg border border-party-red/40 px-3 py-2 text-xs font-semibold text-party-red hover:bg-party-red/10"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(d)}
+              disabled={saving}
+              className="rounded-lg bg-party-red px-4 py-2 text-sm font-semibold text-white hover:bg-party-red/90 disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

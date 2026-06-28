@@ -11,7 +11,24 @@ interface Draft {
   bundle_price: number;
   image_url: string;
   images: string[];
+  badge?: string;
+  badge_color?: string;
+  badge_bg?: string;
 }
+
+/** Brand palette offered for badge colors. */
+const BADGE_COLORS = [
+  { name: "Red", hex: "#DC4327" },
+  { name: "Yellow", hex: "#F9D84B" },
+  { name: "Ink", hex: "#191919" },
+  { name: "Cream", hex: "#FFF6E0" },
+  { name: "Blue", hex: "#2A6FDB" },
+  { name: "Green", hex: "#3AA84A" },
+  { name: "Pink", hex: "#E85B81" },
+  { name: "White", hex: "#FFFFFF" },
+];
+const DEFAULT_BADGE_BG = "#DC4327";
+const DEFAULT_BADGE_TEXT = "#FFFFFF";
 
 function blankBundle(): Bundle {
   return {
@@ -60,6 +77,9 @@ export default function BundlesPanel({
           bundle_price: b.bundle_price,
           image_url: b.image_url ?? "",
           images: b.images ?? [],
+          badge: b.badge ?? "",
+          badge_color: b.badge_color,
+          badge_bg: b.badge_bg,
         },
       ])
     )
@@ -180,6 +200,13 @@ export default function BundlesPanel({
               </div>
 
               <div className="space-y-3">
+                {d.badge?.trim() && (
+                  <TagChip
+                    text={d.badge}
+                    bg={d.badge_bg}
+                    color={d.badge_color}
+                  />
+                )}
                 <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
                   <div>
                     <label className="field-label">Name</label>
@@ -212,6 +239,13 @@ export default function BundlesPanel({
                     onChange={(e) => set(b.id, { description: e.target.value })}
                   />
                 </div>
+
+                <BadgePicker
+                  badge={d.badge ?? ""}
+                  color={d.badge_color}
+                  bg={d.badge_bg}
+                  onChange={(patch) => set(b.id, patch)}
+                />
 
                 <MultiImageEditor
                   images={d.images}
@@ -274,26 +308,29 @@ export default function BundlesPanel({
               </div>
 
               <div className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
-                  <div>
-                    <label className="field-label">Name</label>
-                    <input
-                      className="field"
-                      placeholder="e.g. Ultimate Party Package"
-                      value={b.name}
-                      onChange={(e) => setItem(b.id, { name: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="field-label">Badge (optional)</label>
-                    <input
-                      className="field"
-                      placeholder="e.g. Highly Requested"
-                      value={b.badge ?? ""}
-                      onChange={(e) => setItem(b.id, { badge: e.target.value })}
-                    />
-                  </div>
+                {b.badge?.trim() && (
+                  <TagChip
+                    text={b.badge}
+                    bg={b.badge_bg}
+                    color={b.badge_color}
+                  />
+                )}
+                <div>
+                  <label className="field-label">Name</label>
+                  <input
+                    className="field"
+                    placeholder="e.g. Ultimate Party Package"
+                    value={b.name}
+                    onChange={(e) => setItem(b.id, { name: e.target.value })}
+                  />
                 </div>
+
+                <BadgePicker
+                  badge={b.badge ?? ""}
+                  color={b.badge_color}
+                  bg={b.badge_bg}
+                  onChange={(patch) => setItem(b.id, patch)}
+                />
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
@@ -412,6 +449,125 @@ export default function BundlesPanel({
           </button>
         </div>
       </section>
+    </div>
+  );
+}
+
+/** Saved-tag indicator shown at the top of a bundle card in the portal. */
+function TagChip({
+  text,
+  bg,
+  color,
+}: {
+  text: string;
+  bg?: string;
+  color?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-party-ink/40">
+        Tag
+      </span>
+      <span
+        className="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
+        style={{
+          backgroundColor: bg || DEFAULT_BADGE_BG,
+          color: color || DEFAULT_BADGE_TEXT,
+        }}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
+/** Tag text + lettering/background color pickers, with a live preview. */
+function BadgePicker({
+  badge,
+  color,
+  bg,
+  onChange,
+}: {
+  badge: string;
+  color?: string;
+  bg?: string;
+  onChange: (patch: {
+    badge?: string;
+    badge_color?: string;
+    badge_bg?: string;
+  }) => void;
+}) {
+  const textColor = color || DEFAULT_BADGE_TEXT;
+  const bgColor = bg || DEFAULT_BADGE_BG;
+  return (
+    <div>
+      <label className="field-label">Tag / badge (optional)</label>
+      <input
+        className="field"
+        placeholder="e.g. Highly Requested · Most Popular"
+        value={badge}
+        onChange={(e) => onChange({ badge: e.target.value })}
+      />
+      {badge.trim() && (
+        <div className="mt-3 space-y-3 rounded-xl border border-party-ink/10 bg-party-cream/40 p-3">
+          <div className="flex items-center gap-3">
+            <span className="w-20 text-xs font-semibold text-party-ink/60">
+              Preview
+            </span>
+            <span
+              className="rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider"
+              style={{ backgroundColor: bgColor, color: textColor }}
+            >
+              {badge}
+            </span>
+          </div>
+          <Swatches
+            label="Background"
+            value={bgColor}
+            onPick={(hex) => onChange({ badge_bg: hex })}
+          />
+          <Swatches
+            label="Lettering"
+            value={textColor}
+            onPick={(hex) => onChange({ badge_color: hex })}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Swatches({
+  label,
+  value,
+  onPick,
+}: {
+  label: string;
+  value: string;
+  onPick: (hex: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-20 shrink-0 text-xs font-semibold text-party-ink/60">
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-1.5">
+        {BADGE_COLORS.map((c) => {
+          const active = value.toLowerCase() === c.hex.toLowerCase();
+          return (
+            <button
+              key={c.hex}
+              type="button"
+              title={c.name}
+              onClick={() => onPick(c.hex)}
+              className={`h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 ${
+                active ? "border-party-ink ring-2 ring-party-ink/30" : "border-party-ink/15"
+              }`}
+              style={{ backgroundColor: c.hex }}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -11,6 +11,9 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 import Gallery from "@/components/Gallery";
 import InstagramStrip from "@/components/InstagramStrip";
 
+// Keep the live catalog fresh without a redeploy (see shop/page.tsx).
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [products, bundles, content] = await Promise.all([
     getProducts(),
@@ -200,7 +203,7 @@ export default async function HomePage() {
       <InstagramStrip />
 
       {/* ───────────── SERVING THE DMV + DELIVERY ───────────── */}
-      <section className="bg-party-red text-white">
+      <section id="delivery" className="scroll-mt-24 bg-party-red text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-2">
           <div className="reveal">
             <p className="eyebrow text-white/80">{c.deliveryEyebrow}</p>

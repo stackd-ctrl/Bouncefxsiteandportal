@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lead } from "@/lib/content";
-import type { Booking } from "@/lib/types";
+import type { Booking, Product } from "@/lib/types";
 import { money, prettyDate, todayISO } from "@/lib/format";
+import NewBookingForm from "./NewBookingForm";
 
 type Stage = Lead["stage"];
 
@@ -78,11 +79,24 @@ function parseLine(line: string): string[] {
 export default function CustomersPanel({
   leads: initial,
   bookings,
+  products = [],
+  focusCustomerEmail = null,
+  onFocusConsumed,
+  onOpenBooking,
 }: {
   leads: Lead[];
   bookings: Booking[];
+  products?: Product[];
+  focusCustomerEmail?: string | null;
+  onFocusConsumed?: () => void;
+  onOpenBooking?: (id: string) => void;
 }) {
   const [leads, setLeads] = useState<Lead[]>(initial);
+  const [addingFor, setAddingFor] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+  } | null>(null);
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
@@ -112,6 +126,10 @@ export default function CustomersPanel({
   function upsert(lead: Lead) {
     const exists = leads.some((l) => l.id === lead.id);
     persist(exists ? leads.map((l) => (l.id === lead.id ? lead : l)) : [lead, ...leads]);
+  }
+
+  function remove(id: string) {
+    persist(leads.filter((l) => l.id !== id));
   }
 
   // ── Merge leads + booking-derived customers (dedup by email) ──
@@ -167,6 +185,16 @@ export default function CustomersPanel({
     }
     return out;
   }, [leads, bookings]);
+
+  // Open a specific customer when navigated here from the Bookings tab.
+  useEffect(() => {
+    if (!focusCustomerEmail) return;
+    const key = focusCustomerEmail.toLowerCase();
+    const row = rows.find((r) => (r.email || "").toLowerCase() === key);
+    if (row) setEditing(row);
+    onFocusConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusCustomerEmail]);
 
   const stats = useMemo(() => {
     const active = rows.filter((r) => !r.archived);
@@ -431,8 +459,15 @@ export default function CustomersPanel({
                 key={r.id}
                 className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
               >
-                <td className="px-4 py-3 font-semibold text-gray-900">
-                  {r.name || <span className="text-gray-400">(no name)</span>}
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => setEditing(r)}
+                    className="font-semibold text-gray-900 hover:text-party-red hover:underline"
+                  >
+                    {r.name || (
+                      <span className="text-gray-400">(no name)</span>
+                    )}
+                  </button>
                 </td>
                 <td className="px-4 py-3 text-gray-700">{r.email}</td>
                 <td className="px-4 py-3 text-gray-700">{r.phone}</td>
@@ -502,11 +537,33 @@ export default function CustomersPanel({
       {editing && (
         <EditDrawer
           row={editing}
+          bookings={bookings}
           onClose={() => setEditing(null)}
           onSave={(lead) => {
             upsert(lead);
             setEditing(null);
           }}
+          onArchive={(r) =>
+            upsert({ ...rowToLead(r), archived: !r.archived })
+          }
+          onDelete={(r) => {
+            remove(r.id);
+            setEditing(null);
+          }}
+          onAddBooking={(r) => {
+            setEditing(null);
+            setAddingFor({ name: r.name, email: r.email, phone: r.phone });
+          }}
+          onOpenBooking={onOpenBooking}
+        />
+      )}
+
+      {addingFor && (
+        <NewBookingForm
+          products={products}
+          leads={leads}
+          presetCustomer={addingFor}
+          onClose={() => setAddingFor(null)}
         />
       )}
     </div>
@@ -546,14 +603,33 @@ function Th({
 
 function EditDrawer({
   row,
+  bookings,
   onClose,
   onSave,
+  onArchive,
+  onDelete,
+  onAddBooking,
+  onOpenBooking,
 }: {
   row: Row;
+  bookings: Booking[];
   onClose: () => void;
   onSave: (l: Lead) => void;
+  onArchive: (r: Row) => void;
+  onDelete: (r: Row) => void;
+  onAddBooking: (r: Row) => void;
+  onOpenBooking?: (id: string) => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [d, setD] = useState<Lead>(rowToLead(row));
+  // Bookings linked to this customer (matched by email).
+  const linked = useMemo(() => {
+    const key = (row.email || "").toLowerCase();
+    if (!key) return [] as Booking[];
+    return bookings
+      .filter((b) => (b.customer_email || "").toLowerCase() === key)
+      .sort((a, b) => (a.event_date < b.event_date ? 1 : -1));
+  }, [bookings, row.email]);
   function set(patch: Partial<Lead>) {
     setD((c) => ({ ...c, ...patch }));
   }
@@ -582,6 +658,65 @@ function EditDrawer({
             {row.lastEvent ? ` · last ${prettyDate(row.lastEvent)}` : ""}
           </div>
         )}
+        {linked.length > 0 && (
+          <div className="border-b border-gray-200 px-5 py-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              Linked bookings
+            </p>
+            <ul className="mt-2 space-y-2">
+              {linked.map((b) => (
+                <li
+                  key={b.id}
+                  onClick={() => onOpenBooking?.(b.id)}
+                  className={`flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm ${
+                    onOpenBooking
+                      ? "cursor-pointer hover:border-party-red hover:bg-party-cream/40"
+                      : ""
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900">
+                      {b.event_date ? prettyDate(b.event_date) : "—"}
+                      <span className="ml-2 font-normal text-gray-500">
+                        {b.event_type}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {b.order_number != null ? `#${b.order_number} · ` : ""}
+                      {b.confirmation_number ?? ""}
+                      {" · "}
+                      {b.product_ids?.length ?? 0} item(s)
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-semibold text-gray-900">
+                      {money(Number(b.total_amount))}
+                    </p>
+                    <p className="text-[11px] capitalize text-gray-500">
+                      {b.status}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Admin actions */}
+        <div className="flex flex-wrap gap-2 border-b border-gray-200 px-5 py-3">
+          <button
+            onClick={() => onAddBooking(row)}
+            className="rounded-lg bg-party-red px-3 py-2 text-xs font-semibold text-white hover:bg-party-red/90"
+          >
+            + Add booking
+          </button>
+          <button
+            onClick={() => onArchive(row)}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            {row.archived ? "Restore" : "Archive"}
+          </button>
+        </div>
+
         <div className="space-y-4 p-5">
           <div>
             <label className={labelCls}>Name</label>
@@ -643,19 +778,50 @@ function EditDrawer({
             />
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onSave(d)}
-            className="rounded-lg bg-party-red px-4 py-2 text-sm font-semibold text-white hover:bg-party-red/90"
-          >
-            Save
-          </button>
+        <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-5 py-4">
+          <div>
+            {row.isLead &&
+              (confirmDelete ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-party-red">
+                    Delete permanently?
+                  </span>
+                  <button
+                    onClick={() => onDelete(row)}
+                    className="rounded-lg bg-party-red px-3 py-2 text-xs font-semibold text-white hover:bg-party-red/90"
+                  >
+                    Yes, delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="rounded-lg border border-party-red/40 px-3 py-2 text-xs font-semibold text-party-red hover:bg-party-red/10"
+                >
+                  Delete
+                </button>
+              ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(d)}
+              className="rounded-lg bg-party-red px-4 py-2 text-sm font-semibold text-white hover:bg-party-red/90"
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,9 @@ import PageHeader from "@/components/PageHeader";
 import DeliveryCalculator from "@/components/DeliveryCalculator";
 import { money } from "@/lib/format";
 
+// Keep the live catalog fresh without a redeploy (see shop/page.tsx).
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Bundle Packages",
   description:

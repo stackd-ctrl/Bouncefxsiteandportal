@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { createBrowserSupabase, supabaseConfigured } from "@/lib/supabase/client";
 import type { Booking, Product, Bundle } from "@/lib/types";
 import type { SiteInfo, MediaInfo, PagesContent, Lead } from "@/lib/content";
 import AdminDashboard from "./AdminDashboard";
@@ -11,6 +12,7 @@ import BundlesPanel from "./admin/BundlesPanel";
 import MediaPanel from "./admin/MediaPanel";
 import PagesPanel from "./admin/PagesPanel";
 import SettingsPanel from "./admin/SettingsPanel";
+import TeamPanel from "./admin/TeamPanel";
 
 type Tab =
   | "bookings"
@@ -19,7 +21,8 @@ type Tab =
   | "bundles"
   | "media"
   | "pages"
-  | "settings";
+  | "settings"
+  | "team";
 
 const NAV: { key: Tab; label: string; icon: JSX.Element; desc: string }[] = [
   {
@@ -75,7 +78,15 @@ const NAV: { key: Tab; label: string; icon: JSX.Element; desc: string }[] = [
     label: "Settings",
     desc: "Business info",
     icon: (
-      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.81 1.17V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 7 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 2.6 14H2.5a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 2.5V2.4a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9h.1a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.81 1.17V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 7 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 2.6 14H2.5a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 2.5V2.4a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9h.1a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+    ),
+  },
+  {
+    key: "team",
+    label: "Team",
+    desc: "Admin access",
+    icon: (
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6" />
     ),
   },
 ];
@@ -92,6 +103,9 @@ export default function AdminPortal({
   pages,
   demo,
   email,
+  isOwner,
+  admins,
+  ownerEmail,
 }: {
   bookings: Booking[];
   products: Product[];
@@ -104,9 +118,40 @@ export default function AdminPortal({
   pages: PagesContent;
   demo: boolean;
   email: string | null;
+  isOwner: boolean;
+  admins: string[];
+  ownerEmail: string | null;
 }) {
   const [tab, setTab] = useState<Tab>("bookings");
+  // Only the owner manages admin access.
+  const nav = NAV.filter((n) => n.key !== "team" || isOwner);
+  const [loggingOut, setLoggingOut] = useState(false);
+  // Cross-tab navigation: open a specific booking or customer when jumping tabs.
+  const [focusBookingId, setFocusBookingId] = useState<string | null>(null);
+  const [focusCustomerEmail, setFocusCustomerEmail] = useState<string | null>(
+    null
+  );
   const current = NAV.find((n) => n.key === tab)!;
+
+  function openBooking(id: string) {
+    setFocusBookingId(id);
+    setTab("bookings");
+  }
+  function openCustomer(email: string) {
+    setFocusCustomerEmail(email);
+    setTab("customers");
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      if (supabaseConfigured) {
+        await createBrowserSupabase().auth.signOut();
+      }
+    } finally {
+      window.location.href = "/admin/login";
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 lg:flex">
@@ -123,7 +168,7 @@ export default function AdminPortal({
         </div>
 
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0">
-          {NAV.map((n) => {
+          {nav.map((n) => {
             const active = tab === n.key;
             return (
               <button
@@ -158,10 +203,18 @@ export default function AdminPortal({
           )}
           <Link
             href="/"
-            className="mt-2 inline-block text-sm font-semibold text-party-red hover:underline"
+            className="mt-2 block text-sm font-semibold text-party-red hover:underline"
           >
             View live site →
           </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
+          >
+            {loggingOut ? "Logging out…" : "Log out"}
+          </button>
         </div>
       </aside>
 
@@ -172,20 +225,45 @@ export default function AdminPortal({
             <h1 className="text-lg font-bold text-gray-900">{current.label}</h1>
             <p className="text-xs text-gray-500">{current.desc}</p>
           </div>
-          <Link
-            href="/"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 lg:hidden"
-          >
-            View site
-          </Link>
+          <div className="flex items-center gap-2 lg:hidden">
+            <Link
+              href="/"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              View site
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+            >
+              {loggingOut ? "…" : "Log out"}
+            </button>
+          </div>
         </header>
 
         <div className="p-5 sm:p-8">
           {tab === "bookings" && (
-            <AdminDashboard bookings={bookings} products={products} email={email} />
+            <AdminDashboard
+              bookings={bookings}
+              products={products}
+              leads={leads}
+              email={email}
+              focusBookingId={focusBookingId}
+              onFocusConsumed={() => setFocusBookingId(null)}
+              onOpenCustomer={openCustomer}
+            />
           )}
           {tab === "customers" && (
-            <CustomersPanel leads={leads} bookings={bookings} />
+            <CustomersPanel
+              leads={leads}
+              bookings={bookings}
+              products={products}
+              focusCustomerEmail={focusCustomerEmail}
+              onFocusConsumed={() => setFocusCustomerEmail(null)}
+              onOpenBooking={openBooking}
+            />
           )}
           {tab === "products" && (
             <ProductsPanel products={products} customProducts={customProducts} />
@@ -200,6 +278,13 @@ export default function AdminPortal({
           {tab === "media" && <MediaPanel media={media} />}
           {tab === "pages" && <PagesPanel pages={pages} site={site} />}
           {tab === "settings" && <SettingsPanel site={site} />}
+          {tab === "team" && isOwner && (
+            <TeamPanel
+              initialAdmins={admins}
+              ownerEmail={ownerEmail}
+              currentEmail={email}
+            />
+          )}
         </div>
       </main>
     </div>

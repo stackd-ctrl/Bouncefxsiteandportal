@@ -81,22 +81,39 @@ export const PRODUCTS: Product[] = [
 
 // Inventory counts + footprints (feet) — powers quantity-aware availability and
 // the space/fit checker. Kept here so the static catalog mirrors Supabase.
-const PRODUCT_META: Record<
+export const PRODUCT_META: Record<
   string,
-  { quantity: number; footprint: [number, number] }
+  { quantity: number; footprint: [number, number]; height?: number }
 > = {
-  "11111111-1111-4111-8111-111111111111": { quantity: 2, footprint: [25, 18] },
-  "22222222-2222-4222-8222-222222222222": { quantity: 1, footprint: [25, 18] },
-  "33333333-3333-4333-8333-333333333333": { quantity: 1, footprint: [22, 22] },
+  // height = inflated height in feet (for indoor ceiling clearance)
+  "11111111-1111-4111-8111-111111111111": { quantity: 2, footprint: [25, 18], height: 16 },
+  "22222222-2222-4222-8222-222222222222": { quantity: 1, footprint: [25, 18], height: 15 },
+  "33333333-3333-4333-8333-333333333333": { quantity: 1, footprint: [22, 22], height: 16 },
   "44444444-4444-4444-8444-444444444444": { quantity: 40, footprint: [6, 2.5] },
-  "55555555-5555-4555-8555-555555555555": { quantity: 4, footprint: [22, 22] },
+  "55555555-5555-4555-8555-555555555555": { quantity: 4, footprint: [22, 22], height: 14 },
   "66666666-6666-4666-8666-666666666666": { quantity: 200, footprint: [1.5, 1.5] },
 };
+/**
+ * Merge physical specs (quantity / footprint / height) onto a product list by
+ * id. These live in code rather than the DB, so they must be re-applied to live
+ * Supabase rows too — otherwise the space/fit checker and quantity-aware
+ * availability lose their data once Supabase is connected.
+ */
+export function applyProductMeta<T extends { id: string }>(products: T[]): T[] {
+  return products.map((p) => {
+    const m = PRODUCT_META[p.id];
+    return m
+      ? { ...p, quantity: m.quantity, footprint: m.footprint, height: m.height }
+      : p;
+  });
+}
+
 PRODUCTS.forEach((p) => {
   const m = PRODUCT_META[p.id];
   if (m) {
     p.quantity = m.quantity;
     p.footprint = m.footprint;
+    p.height = m.height;
   }
 });
 

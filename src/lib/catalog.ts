@@ -1,4 +1,4 @@
-import { PRODUCTS, BUNDLES } from "./data";
+import { PRODUCTS, BUNDLES, applyProductMeta } from "./data";
 import type { Product, Bundle } from "./types";
 import { createAdminSupabase, supabaseConfigured } from "./supabase/server";
 import { readContent } from "./content";
@@ -38,7 +38,8 @@ export async function getProducts(): Promise<Product[]> {
       .select("*")
       .order("price_per_day", { ascending: false });
     if (error || !data || data.length === 0) return applyOverrides(PRODUCTS);
-    return applyOverrides(data as Product[]);
+    // DB rows lack footprint/height/quantity (those live in code) — re-apply.
+    return applyOverrides(applyProductMeta(data as Product[]));
   } catch {
     return applyOverrides(PRODUCTS);
   }

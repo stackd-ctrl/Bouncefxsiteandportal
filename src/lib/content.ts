@@ -23,6 +23,10 @@ export interface ProductOverride {
   is_available?: boolean;
   /** How many units Bounce FX owns (drives quantity-aware availability). */
   quantity?: number;
+  /** Footprint in feet [width, depth] — overrides the code default. */
+  footprint?: [number, number];
+  /** Inflated height in feet — overrides the code default. */
+  height?: number;
 }
 
 export interface BundleOverride {
@@ -31,6 +35,12 @@ export interface BundleOverride {
   bundle_price?: number;
   image_url?: string;
   images?: string[];
+  /** Marketing tag shown as a corner badge, e.g. "Highly Requested". */
+  badge?: string;
+  /** Badge lettering color (hex). */
+  badge_color?: string;
+  /** Badge background color (hex). */
+  badge_bg?: string;
 }
 
 /** A lead/customer record managed in the admin CRM. */
@@ -166,6 +176,9 @@ export interface SiteContent {
   customBundles: Bundle[];
   /** CRM leads/customers managed in the admin. */
   leads: Lead[];
+  /** Extra emails (lowercased) allowed into the admin portal, beyond the
+   *  bootstrap ADMIN_EMAIL owner. Managed in the Team panel. */
+  admins: string[];
   site: SiteInfo;
   media: MediaInfo;
   pages: PagesContent;
@@ -432,6 +445,7 @@ function hydrate(parsed: Partial<SiteContent> | null): SiteContent {
     customProducts: parsed?.customProducts ?? [],
     customBundles: parsed?.customBundles ?? [],
     leads: parsed?.leads ?? [],
+    admins: parsed?.admins ?? [],
     site: { ...DEFAULT_SITE, ...(parsed?.site ?? {}) },
     media: { ...DEFAULT_MEDIA, ...(parsed?.media ?? {}) },
     pages: hydratePages(parsed?.pages),
@@ -488,6 +502,7 @@ export async function writeContent(
     customProducts: next.customProducts ?? current.customProducts,
     customBundles: next.customBundles ?? current.customBundles,
     leads: next.leads ?? current.leads,
+    admins: next.admins ?? current.admins,
     site: { ...current.site, ...(next.site ?? {}) },
     media: { ...current.media, ...(next.media ?? {}) },
     pages: mergedPages as unknown as PagesContent,

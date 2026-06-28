@@ -18,6 +18,8 @@ interface Summary {
   items: string;
   email?: string;
   payType?: string;
+  orderNumber?: string;
+  confirmationNumber?: string;
 }
 
 export default async function ConfirmationPage({
@@ -33,6 +35,8 @@ export default async function ConfirmationPage({
     delivery?: string;
     items?: string;
     payType?: string;
+    order?: string;
+    conf?: string;
   };
 }) {
   let summary: Summary | null = null;
@@ -53,6 +57,8 @@ export default async function ConfirmationPage({
         delivery: Number(m.delivery_fee ?? 0),
         items: "your selected rentals",
         payType: m.payment_type,
+        orderNumber: m.order_number || undefined,
+        confirmationNumber: m.confirmation_number || undefined,
       };
     } catch {
       summary = null;
@@ -66,6 +72,8 @@ export default async function ConfirmationPage({
       delivery: Number(searchParams.delivery ?? 0),
       items: searchParams.items ?? "your selected rentals",
       payType: searchParams.payType,
+      orderNumber: searchParams.order || undefined,
+      confirmationNumber: searchParams.conf || undefined,
     };
   }
 
@@ -90,6 +98,27 @@ export default async function ConfirmationPage({
         {summary && (
           <div className="card mt-8 bg-white p-6 text-left text-party-ink">
             <h2 className="font-display text-xl font-bold italic">Booking Summary</h2>
+
+            {summary.confirmationNumber && (
+              <div className="mt-4 rounded-xl border border-party-ink/15 bg-party-cream px-4 py-3 text-center">
+                <p className="text-xs font-bold uppercase tracking-wider text-party-ink/50">
+                  Confirmation number
+                </p>
+                <p className="font-display text-2xl font-bold italic tracking-wide text-party-red">
+                  {summary.confirmationNumber}
+                </p>
+                {summary.orderNumber && (
+                  <p className="mt-0.5 text-xs text-party-ink/50">
+                    Order #{summary.orderNumber}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-party-ink/60">
+                  Keep this handy — reference it in any messages about your
+                  booking.
+                </p>
+              </div>
+            )}
+
             <div className="mt-4 space-y-2 text-sm">
               {summary.date && (
                 <SummaryRow label="Event date" value={prettyDate(summary.date)} />

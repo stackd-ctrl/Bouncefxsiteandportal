@@ -5,6 +5,9 @@ import PageHeader from "@/components/PageHeader";
 import PartyBuilder from "@/components/PartyBuilder";
 import SpaceChecker from "@/components/SpaceChecker";
 
+// Keep the live catalog fresh without a redeploy (see shop/page.tsx).
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Build Your Party",
   description:

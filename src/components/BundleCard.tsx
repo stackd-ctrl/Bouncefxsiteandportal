@@ -35,15 +35,23 @@ export default function BundleCard({
           : "bg-white text-party-ink"
       }`}
     >
-      {featured && (
-        <span className="absolute -top-3 left-8 z-10 rounded-full bg-party-yellow px-4 py-1 font-body text-xs font-bold uppercase tracking-wider text-party-ink">
-          Most Popular
-        </span>
-      )}
-      {!featured && bundle.badge && (
-        <span className="absolute -top-3 left-8 z-10 rounded-full bg-party-red px-4 py-1 font-body text-xs font-bold uppercase tracking-wider text-white">
+      {bundle.badge ? (
+        // Custom owner-set tag with chosen colors (defaults: red bg, white text).
+        <span
+          className="absolute -top-3 left-8 z-10 rounded-full px-4 py-1 font-body text-xs font-bold uppercase tracking-wider"
+          style={{
+            backgroundColor: bundle.badge_bg || "#DC4327",
+            color: bundle.badge_color || "#FFFFFF",
+          }}
+        >
           {bundle.badge}
         </span>
+      ) : (
+        featured && (
+          <span className="absolute -top-3 left-8 z-10 rounded-full bg-party-yellow px-4 py-1 font-body text-xs font-bold uppercase tracking-wider text-party-ink">
+            Most Popular
+          </span>
+        )
       )}
 
       {photos.length > 0 && <BundleGallery images={photos} />}

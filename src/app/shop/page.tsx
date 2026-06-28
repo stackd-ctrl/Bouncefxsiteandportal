@@ -4,6 +4,10 @@ import { getPages } from "@/lib/content";
 import ShopGrid from "@/components/ShopGrid";
 import PageHeader from "@/components/PageHeader";
 
+// Re-fetch the live catalog at most once a minute (admin saves still refresh
+// instantly via revalidatePath). Catches out-of-band DB edits / re-seeds too.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Shop Rentals",
   description:

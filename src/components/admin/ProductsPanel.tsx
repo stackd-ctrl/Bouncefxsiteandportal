@@ -13,6 +13,8 @@ interface Draft {
   images: string[];
   is_available: boolean;
   quantity: number;
+  footprint?: [number, number];
+  height?: number;
 }
 
 const CATEGORIES: { value: Category; label: string }[] = [
@@ -68,6 +70,8 @@ export default function ProductsPanel({
           images: p.images ?? [],
           is_available: p.is_available,
           quantity: p.quantity ?? 1,
+          footprint: p.footprint,
+          height: p.height,
         },
       ])
     )
@@ -84,14 +88,28 @@ export default function ProductsPanel({
     setSavingId(id);
     setSavedId(null);
     try {
+      const d = drafts[id];
+      const w = Number(d.footprint?.[0]) || 0;
+      const dep = Number(d.footprint?.[1]) || 0;
+      const h = Number(d.height) || 0;
+      const override = {
+        name: d.name,
+        price_per_day: Number(d.price_per_day) || 0,
+        description: d.description,
+        image_url: d.image_url,
+        images: d.images.filter(Boolean),
+        is_available: d.is_available,
+        quantity: Number(d.quantity) || 1,
+        // Only override dimensions when valid; otherwise omit (JSON drops
+        // undefined) so the product keeps its built-in spec.
+        footprint:
+          w > 0 && dep > 0 ? ([w, dep] as [number, number]) : undefined,
+        height: h > 0 ? h : undefined,
+      };
       const res = await fetch("/api/admin/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          products: {
-            [id]: { ...drafts[id], images: drafts[id].images.filter(Boolean) },
-          },
-        }),
+        body: JSON.stringify({ products: { [id]: override } }),
       });
       if (!res.ok) throw new Error();
       setSavedId(id);
@@ -126,12 +144,22 @@ export default function ProductsPanel({
     setSavingCustom(true);
     setSavedCustom(false);
     try {
-      const cleaned = custom.map((p) => ({
-        ...p,
-        price_per_day: Number(p.price_per_day) || 0,
-        quantity: Number(p.quantity) || 1,
-        images: (p.images ?? []).filter(Boolean),
-      }));
+      const cleaned = custom.map((p) => {
+        const w = Number(p.footprint?.[0]) || 0;
+        const d = Number(p.footprint?.[1]) || 0;
+        const h = Number(p.height) || 0;
+        return {
+          ...p,
+          price_per_day: Number(p.price_per_day) || 0,
+          quantity: Number(p.quantity) || 1,
+          images: (p.images ?? []).filter(Boolean),
+          // Only keep real dimensions; a partial/empty footprint would otherwise
+          // show as a 0×0 item in the Space & fit checker.
+          footprint:
+            w > 0 && d > 0 ? ([w, d] as [number, number]) : undefined,
+          height: h > 0 ? h : undefined,
+        };
+      });
       const res = await fetch("/api/admin/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -215,6 +243,60 @@ export default function ProductsPanel({
                     value={d.description}
                     onChange={(e) => set(p.id, { description: e.target.value })}
                   />
+                </div>
+
+                <div>
+                  <label className="field-label">Dimensions (ft)</label>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      className="field"
+                      placeholder="Width"
+                      value={d.footprint?.[0] ?? ""}
+                      onChange={(e) =>
+                        set(p.id, {
+                          footprint: [
+                            Number(e.target.value),
+                            d.footprint?.[1] ?? 0,
+                          ],
+                        })
+                      }
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      className="field"
+                      placeholder="Depth"
+                      value={d.footprint?.[1] ?? ""}
+                      onChange={(e) =>
+                        set(p.id, {
+                          footprint: [
+                            d.footprint?.[0] ?? 0,
+                            Number(e.target.value),
+                          ],
+                        })
+                      }
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      className="field"
+                      placeholder="Height"
+                      value={d.height ?? ""}
+                      onChange={(e) =>
+                        set(p.id, { height: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-party-ink/50">
+                    Width × Depth × Height. Inflatables also use these for the
+                    Space &amp; fit checker; for other items they&apos;re for
+                    your records and the product page.
+                  </p>
                 </div>
 
                 <MultiImageEditor
@@ -346,6 +428,59 @@ export default function ProductsPanel({
                     }
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="field-label">Dimensions (ft)</label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    className="field"
+                    placeholder="Width"
+                    value={p.footprint?.[0] ?? ""}
+                    onChange={(e) =>
+                      setItem(p.id, {
+                        footprint: [
+                          Number(e.target.value),
+                          p.footprint?.[1] ?? 0,
+                        ],
+                      })
+                    }
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    className="field"
+                    placeholder="Depth"
+                    value={p.footprint?.[1] ?? ""}
+                    onChange={(e) =>
+                      setItem(p.id, {
+                        footprint: [
+                          p.footprint?.[0] ?? 0,
+                          Number(e.target.value),
+                        ],
+                      })
+                    }
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    className="field"
+                    placeholder="Height"
+                    value={p.height ?? ""}
+                    onChange={(e) =>
+                      setItem(p.id, { height: Number(e.target.value) })
+                    }
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-party-ink/50">
+                  Width × Depth × Height. Inflatables also use these for the
+                  Space &amp; fit checker. Leave blank if not applicable.
+                </p>
               </div>
 
               <div>
