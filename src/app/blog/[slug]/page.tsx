@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { POSTS, getPost } from "@/lib/posts";
 import { prettyDate } from "@/lib/format";
+import { getPages } from "@/lib/content";
+import { getPosts, getPostBySlug } from "@/lib/catalog";
 
-export function generateStaticParams() {
-  return POSTS.map((p) => ({ slug: p.slug }));
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return (await getPosts()).map((p) => ({ slug: p.slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { slug: string };
-}): Metadata {
-  const post = getPost(params.slug);
+}): Promise<Metadata> {
+  const post = await getPostBySlug(params.slug);
   if (!post) return { title: "Article" };
   return {
     title: post.title,
@@ -22,9 +25,14 @@ export function generateMetadata({
   };
 }
 
-export default function PostPage({ params }: { params: { slug: string } }) {
-  const post = getPost(params.slug);
+export default async function PostPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const post = await getPostBySlug(params.slug);
   if (!post) notFound();
+  const c = (await getPages()).blog;
 
   return (
     <>
@@ -34,7 +42,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
             href="/blog"
             className="text-sm font-semibold text-white/70 hover:text-white"
           >
-            ← All articles
+            {c.backLink}
           </Link>
           <p className="eyebrow mt-5 text-white/80">{post.category}</p>
           <h1 className="mt-3 font-display text-4xl font-bold italic leading-[1] sm:text-5xl">
@@ -78,11 +86,9 @@ export default function PostPage({ params }: { params: { slug: string } }) {
 
           <div className="mt-10 rounded-2xl bg-party-cream p-6 text-center">
             <h3 className="font-display text-2xl font-bold italic">
-              Ready to book?
+              {c.ctaTitle}
             </h3>
-            <p className="mt-2 text-party-ink/70">
-              Check your date and reserve in minutes.
-            </p>
+            <p className="mt-2 text-party-ink/70">{c.ctaSub}</p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Link href="/availability" className="btn-red">
                 Book Now

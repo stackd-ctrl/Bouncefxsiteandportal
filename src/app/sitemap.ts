@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { CITIES } from "@/lib/cities";
-import { POSTS } from "@/lib/posts";
+import { getPosts } from "@/lib/catalog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const posts = await getPosts();
   const staticPaths = [
     "",
     "/shop",
@@ -27,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${base}/party-rentals/${c.slug}`,
       lastModified: now,
     })),
-    ...POSTS.map((p) => ({
+    ...posts.map((p) => ({
       url: `${base}/blog/${p.slug}`,
       lastModified: p.date,
     })),

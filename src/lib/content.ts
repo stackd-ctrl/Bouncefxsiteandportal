@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { GALLERY } from "./data";
 import type { Product, Bundle } from "./types";
+import type { Post } from "./posts";
 import { createAdminSupabase, supabaseConfigured } from "./supabase/server";
 
 /**
@@ -117,6 +118,7 @@ export interface PagesContent {
     deliveryBullets: string[];
     ctaTitle: string;
     ctaSub: string;
+    militaryBadge: string;
   };
   about: {
     storyEyebrow: string;
@@ -154,16 +156,57 @@ export interface PagesContent {
     bannerTitle: string;
     bannerBody: string;
     stats: Stat[];
+    callLabel: string;
+    emailLabel: string;
+    deliveryLabel: string;
+    followLabel: string;
   };
   shop: { eyebrow: string; title: string; subtitle: string };
   availability: { eyebrow: string; headline: string; subtitle: string };
   build: { eyebrow: string; title: string; subtitle: string };
-  reviews: { subtitle: string };
+  reviews: {
+    subtitle: string;
+    emptyTitle: string;
+    emptyBody: string;
+    googleCta: string;
+    verifiedNote: string;
+  };
   bundles: {
     headerEyebrow: string;
     headerTitle: string;
     headerSubtitle: string;
     faq: Pair[];
+    compareEyebrow: string;
+    compareTitle: string;
+    compareBody: string;
+    addonsEyebrow: string;
+    addonsTitle: string;
+    addonsBody: string;
+    faqEyebrow: string;
+    faqTitle: string;
+    ctaEyebrow: string;
+    ctaTitle: string;
+    ctaBody: string;
+  };
+  blog: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    backLink: string;
+    ctaTitle: string;
+    ctaSub: string;
+  };
+  footer: {
+    description: string;
+    licensedNote: string;
+    exploreHeading: string;
+    companyHeading: string;
+    serviceAreasHeading: string;
+    areaQuestion: string;
+    areaCta: string;
+    areaNote: string;
+    partnerNote: string;
+    closingTagline: string;
   };
 }
 
@@ -174,6 +217,9 @@ export interface SiteContent {
   customProducts: Product[];
   /** Brand-new bundle packages the owner added in the admin. */
   customBundles: Bundle[];
+  /** Owner-managed blog posts. When non-empty, this list REPLACES the built-in
+   *  articles (the panel seeds it from them, so editing/deleting works). */
+  customPosts: Post[];
   /** CRM leads/customers managed in the admin. */
   leads: Lead[];
   /** Extra emails (lowercased) allowed into the admin portal, beyond the
@@ -251,6 +297,7 @@ export const DEFAULT_PAGES: PagesContent = {
     ],
     ctaTitle: "Ready to book your party?",
     ctaSub: "Check availability for your date and place your order in minutes.",
+    militaryBadge: "Proud to offer military discounts — just ask",
   },
   about: {
     storyEyebrow: "Our story",
@@ -371,6 +418,10 @@ export const DEFAULT_PAGES: PagesContent = {
       { big: "Free", small: "Local delivery" },
       { big: "Included", small: "Setup & pickup" },
     ],
+    callLabel: "Call or text",
+    emailLabel: "Email us",
+    deliveryLabel: "Delivery",
+    followLabel: "Follow along",
   },
   shop: {
     eyebrow: "The full lineup",
@@ -392,12 +443,31 @@ export const DEFAULT_PAGES: PagesContent = {
   },
   reviews: {
     subtitle: "Real words from real Bounce FX parties across the DMV.",
+    emptyTitle: "No reviews yet",
+    emptyBody:
+      "We just launched online booking — be the first to share how your event went. Your review will appear right here.",
+    googleCta: "Read all reviews on Google →",
+    verifiedNote: "Verified from our Google Business profile.",
   },
   bundles: {
     headerEyebrow: "Bundle & save",
     headerTitle: "Bundle Packages",
     headerSubtitle:
       "One package, everything you need. Pick the size that fits your crew and we'll bring the whole setup — bounce house, seating, and shade.",
+    compareEyebrow: "Side by side",
+    compareTitle: "Compare every package",
+    compareBody:
+      "Every bundle includes delivery, setup, and pickup. Here's exactly what comes with each tier.",
+    addonsEyebrow: "Make it yours",
+    addonsTitle: "Add-ons & extras",
+    addonsBody:
+      "Start with a bundle, then build it out. Mix and match to fit your guest list and your space.",
+    faqEyebrow: "Good to know",
+    faqTitle: "Bundle FAQ",
+    ctaEyebrow: "Not sure what you need?",
+    ctaTitle: "We'll help you pick.",
+    ctaBody:
+      "Tell us about your event and we'll recommend the perfect package — or build a custom one. Check your delivery rate while you're here.",
     faq: [
       {
         title: "Can I customize a bundle?",
@@ -416,6 +486,28 @@ export const DEFAULT_PAGES: PagesContent = {
         desc: "Popular dates fill up fast, especially weekends in spring and summer. We recommend booking 2–3 weeks out, but we'll always do our best for last-minute events.",
       },
     ],
+  },
+  blog: {
+    eyebrow: "The Bounce FX blog",
+    title: "Party Planning Tips",
+    subtitle:
+      "Guides, ideas, and safety know-how to make your next event the best one yet.",
+    backLink: "← All articles",
+    ctaTitle: "Ready to book?",
+    ctaSub: "Check your date and reserve in minutes.",
+  },
+  footer: {
+    description:
+      "Party vibes made easy. Inflatables, tents, tables & chairs for unforgettable events across Fredericksburg & the DMV.",
+    licensedNote: "Licensed & Insured",
+    exploreHeading: "Explore",
+    companyHeading: "Company",
+    serviceAreasHeading: "Service areas",
+    areaQuestion: "Does this serve my area?",
+    areaCta: "Check to see →",
+    areaNote: "We deliver up to ~100 miles from Fredericksburg.",
+    partnerNote: "Partner With Bounce FX",
+    closingTagline: "Make Your Event Memorable.",
   },
 };
 
@@ -444,6 +536,7 @@ function hydrate(parsed: Partial<SiteContent> | null): SiteContent {
     bundles: parsed?.bundles ?? {},
     customProducts: parsed?.customProducts ?? [],
     customBundles: parsed?.customBundles ?? [],
+    customPosts: parsed?.customPosts ?? [],
     leads: parsed?.leads ?? [],
     admins: parsed?.admins ?? [],
     site: { ...DEFAULT_SITE, ...(parsed?.site ?? {}) },
@@ -501,6 +594,7 @@ export async function writeContent(
     // full array when it adds/edits/deletes a custom product or bundle.
     customProducts: next.customProducts ?? current.customProducts,
     customBundles: next.customBundles ?? current.customBundles,
+    customPosts: next.customPosts ?? current.customPosts,
     leads: next.leads ?? current.leads,
     admins: next.admins ?? current.admins,
     site: { ...current.site, ...(next.site ?? {}) },
@@ -538,6 +632,7 @@ export async function addLeadFromContact(input: {
   email: string;
   phone?: string;
   message?: string;
+  source?: string;
 }): Promise<void> {
   try {
     const current = await readContent();
@@ -572,7 +667,7 @@ export async function addLeadFromContact(input: {
           email,
           phone: input.phone || "",
           stage: "new",
-          source: "Contact form",
+          source: input.source || "Contact form",
           notes: note,
           created_at: today,
         },

@@ -20,7 +20,13 @@ export async function POST(req: Request) {
       message,
     });
     // Also capture the inquiry as a CRM lead so it shows up in Customers.
-    await addLeadFromContact({ name, email, phone: body.phone, message });
+    await addLeadFromContact({
+      name,
+      email,
+      phone: body.phone,
+      message,
+      source: body.source,
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(

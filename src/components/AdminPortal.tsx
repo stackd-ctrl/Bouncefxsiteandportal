@@ -13,6 +13,8 @@ import MediaPanel from "./admin/MediaPanel";
 import PagesPanel from "./admin/PagesPanel";
 import SettingsPanel from "./admin/SettingsPanel";
 import TeamPanel from "./admin/TeamPanel";
+import BlogPanel from "./admin/BlogPanel";
+import type { Post } from "@/lib/posts";
 
 type Tab =
   | "bookings"
@@ -21,6 +23,7 @@ type Tab =
   | "bundles"
   | "media"
   | "pages"
+  | "articles"
   | "settings"
   | "team";
 
@@ -74,6 +77,14 @@ const NAV: { key: Tab; label: string; icon: JSX.Element; desc: string }[] = [
     ),
   },
   {
+    key: "articles",
+    label: "Articles",
+    desc: "Blog posts",
+    icon: (
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5M8 9h2" />
+    ),
+  },
+  {
     key: "settings",
     label: "Settings",
     desc: "Business info",
@@ -106,6 +117,7 @@ export default function AdminPortal({
   isOwner,
   admins,
   ownerEmail,
+  posts,
 }: {
   bookings: Booking[];
   products: Product[];
@@ -121,6 +133,7 @@ export default function AdminPortal({
   isOwner: boolean;
   admins: string[];
   ownerEmail: string | null;
+  posts: Post[];
 }) {
   const [tab, setTab] = useState<Tab>("bookings");
   // Only the owner manages admin access.
@@ -277,6 +290,7 @@ export default function AdminPortal({
           )}
           {tab === "media" && <MediaPanel media={media} />}
           {tab === "pages" && <PagesPanel pages={pages} site={site} />}
+          {tab === "articles" && <BlogPanel posts={posts} />}
           {tab === "settings" && <SettingsPanel site={site} />}
           {tab === "team" && isOwner && (
             <TeamPanel

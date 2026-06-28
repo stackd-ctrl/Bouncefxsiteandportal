@@ -59,12 +59,9 @@ export default async function ReviewsPage() {
           ) : (
             <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-card">
               <p className="font-display text-2xl font-bold italic">
-                No reviews yet
+                {c.emptyTitle}
               </p>
-              <p className="mt-2 text-party-ink/60">
-                We just launched online booking — be the first to share how your
-                event went. Your review will appear right here.
-              </p>
+              <p className="mt-2 text-party-ink/60">{c.emptyBody}</p>
             </div>
           )}
 
@@ -76,11 +73,9 @@ export default async function ReviewsPage() {
                 rel="noopener noreferrer"
                 className="btn-dark"
               >
-                Read all reviews on Google →
+                {c.googleCta}
               </a>
-              <p className="mt-3 text-sm text-party-ink/55">
-                Verified from our Google Business profile.
-              </p>
+              <p className="mt-3 text-sm text-party-ink/55">{c.verifiedNote}</p>
             </div>
           )}
 

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { POSTS } from "@/lib/posts";
 import { prettyDate } from "@/lib/format";
+import { getPages } from "@/lib/content";
+import { getPosts } from "@/lib/catalog";
 import PageHeader from "@/components/PageHeader";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Party Planning Tips",
@@ -10,19 +13,23 @@ export const metadata: Metadata = {
     "Party planning tips, bounce house safety, and event ideas from Bounce FX Party Rentals in Fredericksburg, VA.",
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const [c, posts] = await Promise.all([
+    getPages().then((p) => p.blog),
+    getPosts(),
+  ]);
   return (
     <>
       <PageHeader
-        eyebrow="The Bounce FX blog"
-        title="Party Planning Tips"
-        subtitle="Guides, ideas, and safety know-how to make your next event the best one yet."
+        eyebrow={c.eyebrow}
+        title={c.title}
+        subtitle={c.subtitle}
         color="bg-party-blue"
       />
       <section className="bg-party-cream">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 md:py-16">
           <div className="grid gap-6 md:grid-cols-2">
-            {POSTS.map((post) => (
+            {posts.map((post) => (
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}

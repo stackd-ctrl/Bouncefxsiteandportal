@@ -46,12 +46,12 @@ export default async function HomePage() {
           </div>
           <p className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/10 px-4 py-1.5 font-body text-sm font-semibold text-white">
             <span aria-hidden>★</span>
-            Proud to offer military discounts — just ask
+            {c.militaryBadge}
           </p>
         </div>
       </section>
 
-      <Marquee text="Party vibes made easy" bg="bg-party-yellow" color="text-party-ink" />
+      <Marquee text={site.tagline} bg="bg-party-yellow" color="text-party-ink" />
 
       {/* Full-bleed hero image band */}
       <div className="relative h-[42vh] min-h-[280px] w-full overflow-hidden bg-black sm:h-[52vh]">

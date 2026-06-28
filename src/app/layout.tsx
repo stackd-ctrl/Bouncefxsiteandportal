@@ -54,7 +54,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { site, media } = await readContent();
+  const { site, media, pages } = await readContent();
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
       <body className="bg-party-cream font-body antialiased">
@@ -62,7 +62,7 @@ export default async function RootLayout({
         <Reveal />
         <Navbar />
         <main className="min-h-screen">{children}</main>
-        <Footer site={site} logo={media.logo} />
+        <Footer site={site} logo={media.logo} footer={pages.footer} />
         <MobileBookBar />
         <PartyChat />
       </body>

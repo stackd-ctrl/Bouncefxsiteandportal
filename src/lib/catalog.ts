@@ -1,7 +1,26 @@
 import { PRODUCTS, BUNDLES, applyProductMeta } from "./data";
+import { POSTS, type Post } from "./posts";
 import type { Product, Bundle } from "./types";
 import { createAdminSupabase, supabaseConfigured } from "./supabase/server";
 import { readContent } from "./content";
+
+/**
+ * Blog posts: owner-managed posts in the content store REPLACE the built-in
+ * articles once present (the admin panel seeds itself from POSTS, so editing or
+ * deleting a built-in article works). Falls back to the built-ins otherwise.
+ */
+export async function getPosts(): Promise<Post[]> {
+  try {
+    const { customPosts } = await readContent();
+    return customPosts.length > 0 ? customPosts : POSTS;
+  } catch {
+    return POSTS;
+  }
+}
+
+export async function getPostBySlug(slug: string): Promise<Post | undefined> {
+  return (await getPosts()).find((p) => p.slug === slug);
+}
 
 /**
  * Catalog access that prefers live Supabase data and gracefully falls back to

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getAdminSession } from "@/lib/auth";
 import { getBookings } from "@/lib/bookings";
-import { getProducts, getBundles } from "@/lib/catalog";
+import { getProducts, getBundles, getPosts } from "@/lib/catalog";
 import { readContent } from "@/lib/content";
 import AdminPortal from "@/components/AdminPortal";
 
@@ -18,10 +18,11 @@ export default async function AdminPage() {
   if (!session.authed) {
     redirect("/admin/login");
   }
-  const [bookings, products, bundles, content] = await Promise.all([
+  const [bookings, products, bundles, posts, content] = await Promise.all([
     getBookings(),
     getProducts(),
     getBundles(),
+    getPosts(),
     readContent(),
   ]);
   return (
@@ -40,6 +41,7 @@ export default async function AdminPage() {
       isOwner={session.isOwner}
       admins={content.admins}
       ownerEmail={process.env.ADMIN_EMAIL?.toLowerCase() ?? null}
+      posts={posts}
     />
   );
 }

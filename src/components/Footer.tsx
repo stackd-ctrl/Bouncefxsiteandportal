@@ -4,14 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { CITIES } from "@/lib/cities";
-import type { SiteInfo } from "@/lib/content";
+import type { SiteInfo, PagesContent } from "@/lib/content";
 
 export default function Footer({
   site,
   logo,
+  footer,
 }: {
   site: SiteInfo;
   logo: string;
+  footer: PagesContent["footer"];
 }) {
   const pathname = usePathname();
   if (pathname?.startsWith("/admin")) return null;
@@ -40,16 +42,15 @@ export default function Footer({
               />
             </Link>
             <p className="mt-4 max-w-sm text-sm text-party-ink/70">
-              Party vibes made easy. Inflatables, tents, tables & chairs for
-              unforgettable events across Fredericksburg & the DMV.
+              {footer.description}
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-party-ink/25 px-4 py-1.5 text-xs font-bold uppercase tracking-wider">
-              Licensed &amp; Insured
+              {footer.licensedNote}
             </p>
           </div>
 
           <div>
-            <h4 className="eyebrow text-party-red">Explore</h4>
+            <h4 className="eyebrow text-party-red">{footer.exploreHeading}</h4>
             <ul className="mt-4 space-y-2.5 font-display text-lg italic">
               {[
                 ["/shop", "Shop Rentals"],
@@ -68,7 +69,7 @@ export default function Footer({
           </div>
 
           <div>
-            <h4 className="eyebrow text-party-red">Company</h4>
+            <h4 className="eyebrow text-party-red">{footer.companyHeading}</h4>
             <ul className="mt-4 space-y-2.5 font-display text-lg italic">
               {[
                 ["/about", "About Us"],
@@ -89,7 +90,9 @@ export default function Footer({
 
         {/* Service areas (SEO internal links) */}
         <div className="mt-12 border-t border-party-ink/15 pt-6">
-          <h4 className="eyebrow text-party-red">Service areas</h4>
+          <h4 className="eyebrow text-party-red">
+            {footer.serviceAreasHeading}
+          </h4>
           <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm font-semibold">
             {CITIES.map((c) => (
               <Link
@@ -109,17 +112,15 @@ export default function Footer({
               href="/#delivery"
               className="font-display text-lg font-bold italic underline decoration-2 underline-offset-4 hover:text-party-red"
             >
-              Does this serve my area?
+              {footer.areaQuestion}
             </Link>
             <Link
               href="/#delivery"
               className="inline-flex items-center gap-1.5 rounded-full bg-party-ink px-5 py-2 text-sm font-bold uppercase tracking-wider text-party-yellow transition-colors hover:bg-party-red hover:text-white"
             >
-              Check to see →
+              {footer.areaCta}
             </Link>
-            <span className="text-xs text-party-ink/60">
-              We deliver up to ~100 miles from Fredericksburg.
-            </span>
+            <span className="text-xs text-party-ink/60">{footer.areaNote}</span>
           </div>
         </div>
       </div>
@@ -144,7 +145,7 @@ export default function Footer({
           ))}
         </div>
         <p className="mt-3 font-display text-lg font-semibold italic">
-          Partner With Bounce FX
+          {footer.partnerNote}
         </p>
         <div className="mt-5 flex items-center justify-center gap-3">
           <a
@@ -167,8 +168,8 @@ export default function Footer({
           </a>
         </div>
         <p className="mt-8 text-xs text-party-ink/50">
-          © {new Date().getFullYear()} Bounce FX Party Rentals · Make Your Event
-          Memorable.
+          © {new Date().getFullYear()} Bounce FX Party Rentals ·{" "}
+          {footer.closingTagline}
         </p>
       </div>
     </footer>

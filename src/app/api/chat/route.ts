@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { getProducts, getBundles } from "@/lib/catalog";
+import { getSiteInfo, type SiteInfo } from "@/lib/content";
+import { CITIES } from "@/lib/cities";
 import { money } from "@/lib/format";
 import { FREE_RADIUS_MILES, PER_MILE_RATE } from "@/lib/delivery";
 import type { Product, Bundle } from "@/lib/types";
+
+/** Roughly how far we'll travel — matches the footer's service-area note. */
+const SERVICE_RADIUS_MILES = 100;
 
 interface ChatLink {
   label: string;
@@ -65,12 +70,35 @@ function recommend(
   };
 }
 
+function contactLine(site: SiteInfo): string {
+  const phones = site.phones.join(" or ");
+  return `• Call/text: ${phones}\n• Email: ${site.email}`;
+}
+
 function answer(
   text: string,
   products: Product[],
-  bundles: Bundle[]
+  bundles: Bundle[],
+  site: SiteInfo
 ): ChatReply {
   const t = text.toLowerCase().trim();
+
+  // City / service-area match — answer "do you deliver to <place>" precisely.
+  const city = CITIES.find((c) => t.includes(c.name.toLowerCase()));
+  if (city) {
+    return {
+      reply: city.freeDelivery
+        ? `Yes! ${city.name}, ${city.state} is right in our backyard — delivery, setup, and pickup are free there (within ${FREE_RADIUS_MILES} miles of Fredericksburg).`
+        : `Yes — we serve ${city.name}, ${city.state}! It's about ${city.miles} miles out, so delivery is a low flat rate ($${PER_MILE_RATE.toFixed(
+            2
+          )}/mile beyond our free ${FREE_RADIUS_MILES}-mile zone). Pop your address into the delivery checker for the exact number.`,
+      links: [
+        { label: `${city.name} party rentals`, href: `/party-rentals/${city.slug}` },
+        { label: "Check your rate", href: "/#delivery" },
+      ],
+      suggestions: ["Check availability", "What do you rent?"],
+    };
+  }
 
   // Greeting
   if (/^(hi|hey|hello|yo|sup|howdy|good (morning|afternoon|evening))\b/.test(t)) {
@@ -98,13 +126,13 @@ function answer(
   }
 
   // Delivery
-  if (/(deliver|delivery|far|distance|zip|mile|fee|come to|drive|travel)/.test(t)) {
+  if (/(deliver|delivery|far|distance|zip|mile|fee|come to|drive|travel|area|serve)/.test(t)) {
     return {
-      reply: `We deliver, set up, and pick up everywhere in the Fredericksburg + DMV area. It's FREE within ${FREE_RADIUS_MILES} miles of 22401, then just $${PER_MILE_RATE.toFixed(
+      reply: `We deliver, set up, and pick up across Fredericksburg, Northern Virginia, Richmond, Washington DC, and the Maryland suburbs — roughly ${SERVICE_RADIUS_MILES} miles out. It's FREE within ${FREE_RADIUS_MILES} miles of 22401, then just $${PER_MILE_RATE.toFixed(
         2
       )}/mile beyond that. Want to check your exact address?`,
-      links: [{ label: "Open the delivery map", href: "/#" }],
-      suggestions: ["Check availability", "How much is a bounce house?"],
+      links: [{ label: "Check your delivery rate", href: "/#delivery" }],
+      suggestions: ["Do you deliver to Richmond?", "How much is a bounce house?"],
     };
   }
 
@@ -159,8 +187,9 @@ function answer(
   // Contact / hours
   if (/(contact|phone|call|text|email|reach|hours|talk|human|number)/.test(t)) {
     return {
-      reply:
-        "You can reach us anytime:\n• Call/text: 571-494-3903 or 571-264-9996\n• Email: Info@bouncefxpartyrentals.com\nWe usually reply within 24 hours.",
+      reply: `You can reach us anytime:\n${contactLine(
+        site
+      )}\nWe usually reply within 24 hours. You can also tap “Talk to a human” below to send your chat straight to the team.`,
       links: [{ label: "Contact page", href: "/contact" }],
     };
   }
@@ -195,8 +224,7 @@ function answer(
 
   // Fallback
   return {
-    reply:
-      "Great question! I can help with rentals, pricing, delivery, and planning for your guest count. For anything specific, the team is one text away at 571-494-3903.",
+    reply: `Great question! I can help with rentals, pricing, delivery, and planning for your guest count. For anything specific, the team is one text away at ${site.phones[0]} — or tap “Talk to a human” below.`,
     suggestions: DEFAULT_SUGGESTIONS,
   };
 }
@@ -224,11 +252,12 @@ export async function POST(req: Request) {
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "message required" }, { status: 400 });
     }
-    const [products, bundles] = await Promise.all([
+    const [products, bundles, site] = await Promise.all([
       getProducts(),
       getBundles(),
+      getSiteInfo(),
     ]);
-    const result = answer(message, products, bundles);
+    const result = answer(message, products, bundles, site);
     return NextResponse.json(result);
   } catch {
     return NextResponse.json(

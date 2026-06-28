@@ -73,6 +73,7 @@ export async function POST(req: Request) {
       bundles: body.bundles,
       customProducts: body.customProducts,
       customBundles: body.customBundles,
+      customPosts: body.customPosts,
       leads: body.leads,
       site: body.site,
       media: body.media,

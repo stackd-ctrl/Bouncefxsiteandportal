@@ -29,6 +29,60 @@ export default function PartyChat() {
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // "Talk to a human" — sends the chat to the team as a contact inquiry.
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", note: "" });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  function transcript(): string {
+    return msgs
+      .map((m) => `${m.role === "user" ? "Guest" : "Bot"}: ${m.text}`)
+      .join("\n");
+  }
+
+  async function submitToTeam(e: React.FormEvent) {
+    e.preventDefault();
+    if (sending || !form.name.trim() || !form.email.trim()) return;
+    setSending(true);
+    try {
+      const message =
+        (form.note.trim() ? `${form.note.trim()}\n\n` : "") +
+        `--- Party Planner chat ---\n${transcript()}`;
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          message,
+          source: "Party Planner chat",
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setSent(true);
+      setShowForm(false);
+      setMsgs((m) => [
+        ...m,
+        {
+          role: "bot",
+          text: `Thanks ${form.name.trim()}! I've sent your chat to the team — they'll reach out within 24 hours. 🎉`,
+        },
+      ]);
+    } catch {
+      setMsgs((m) => [
+        ...m,
+        {
+          role: "bot",
+          text: "Hmm, that didn't go through. You can also call or text us at 571-264-9996.",
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
+  }
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 9e9, behavior: "smooth" });
   }, [msgs, typing, open]);
@@ -158,6 +212,73 @@ export default function PartyChat() {
               </div>
             )}
           </div>
+
+          {/* Talk to a human — contact form */}
+          {showForm ? (
+            <form
+              onSubmit={submitToTeam}
+              className="space-y-2 border-t border-party-ink/10 bg-white p-3"
+            >
+              <p className="text-xs font-semibold text-party-ink/70">
+                Send your chat to the team — we&apos;ll reply within 24 hours.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  required
+                  placeholder="Your name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="rounded-lg border border-party-ink/20 px-3 py-2 text-sm outline-none focus:border-party-red"
+                />
+                <input
+                  required
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="rounded-lg border border-party-ink/20 px-3 py-2 text-sm outline-none focus:border-party-red"
+                />
+              </div>
+              <input
+                placeholder="Phone (optional)"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full rounded-lg border border-party-ink/20 px-3 py-2 text-sm outline-none focus:border-party-red"
+              />
+              <textarea
+                rows={2}
+                placeholder="Anything to add? (optional)"
+                value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })}
+                className="w-full resize-none rounded-lg border border-party-ink/20 px-3 py-2 text-sm outline-none focus:border-party-red"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="rounded-full border border-party-ink/20 px-4 py-2 text-sm font-semibold text-party-ink/70 hover:bg-party-cream"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={sending || !form.name.trim() || !form.email.trim()}
+                  className="flex-1 rounded-full bg-party-red px-4 py-2 text-sm font-semibold text-white hover:bg-[#c5371d] disabled:opacity-50"
+                >
+                  {sending ? "Sending…" : "Send to the team"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            !sent && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex w-full items-center justify-center gap-2 border-t border-party-ink/10 bg-white py-2.5 text-sm font-semibold text-party-red hover:bg-party-cream/50"
+              >
+                💬 Talk to a human
+              </button>
+            )
+          )}
 
           {/* Input */}
           <form

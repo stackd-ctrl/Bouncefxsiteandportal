@@ -32,7 +32,7 @@ export default async function ContactPage() {
 
             <div className="mt-8 space-y-1">
               <p className="font-display text-lg font-semibold italic">
-                Call or text
+                {c.callLabel}
               </p>
               <div className="flex flex-wrap gap-x-6">
                 {PHONES.map((p) => (
@@ -49,7 +49,7 @@ export default async function ContactPage() {
 
             <div className="mt-6 space-y-1">
               <p className="font-display text-lg font-semibold italic">
-                Email us
+                {c.emailLabel}
               </p>
               <a
                 href={`mailto:${EMAIL}`}
@@ -61,14 +61,14 @@ export default async function ContactPage() {
 
             <div className="mt-6 space-y-1">
               <p className="font-display text-lg font-semibold italic">
-                Delivery
+                {c.deliveryLabel}
               </p>
               <p className="text-white/90">{c.deliveryNote}</p>
             </div>
 
             <div className="mt-6">
               <p className="font-display text-lg font-semibold italic">
-                Follow along
+                {c.followLabel}
               </p>
               <div className="mt-2 flex gap-3">
                 <a

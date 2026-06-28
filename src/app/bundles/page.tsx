@@ -22,7 +22,6 @@ type Cell = string | boolean;
 const COLUMNS = ["Small", "Medium", "Large", "Tent Deal"];
 const FEATURED_COL = 1; // Medium = most popular
 
-const COMPARISON_LABEL = "Compare every package";
 const COMPARISON_ROWS: { label: string; cells: Cell[] }[] = [
   { label: "Bounce house", cells: ["1", "1", "1", false] },
   { label: "20x20 high-peak tent", cells: [false, false, false, "1"] },
@@ -89,12 +88,9 @@ export default async function BundlesPage() {
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Side by side</p>
-            <h2 className="section-title mt-3">{COMPARISON_LABEL}</h2>
-            <p className="mt-4 text-lg text-party-ink/65">
-              Every bundle includes delivery, setup, and pickup. Here's exactly
-              what comes with each tier.
-            </p>
+            <p className="eyebrow text-party-red">{c.compareEyebrow}</p>
+            <h2 className="section-title mt-3">{c.compareTitle}</h2>
+            <p className="mt-4 text-lg text-party-ink/65">{c.compareBody}</p>
           </div>
 
           <div className="reveal mt-10 overflow-x-auto">
@@ -214,12 +210,9 @@ export default async function BundlesPage() {
       <section className="bg-party-yellow text-party-ink">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Make it yours</p>
-            <h2 className="section-title mt-3">Add-ons & extras</h2>
-            <p className="mt-4 text-lg text-party-ink/70">
-              Start with a bundle, then build it out. Mix and match to fit your
-              guest list and your space.
-            </p>
+            <p className="eyebrow text-party-red">{c.addonsEyebrow}</p>
+            <h2 className="section-title mt-3">{c.addonsTitle}</h2>
+            <p className="mt-4 text-lg text-party-ink/70">{c.addonsBody}</p>
           </div>
           <div className="mt-10 grid gap-x-12 gap-y-1 md:grid-cols-2">
             {ADDONS.map(([t, d, price]) => (
@@ -244,8 +237,8 @@ export default async function BundlesPage() {
       <section className="bg-party-cream">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
-            <p className="eyebrow text-party-red">Good to know</p>
-            <h2 className="section-title mt-3">Bundle FAQ</h2>
+            <p className="eyebrow text-party-red">{c.faqEyebrow}</p>
+            <h2 className="section-title mt-3">{c.faqTitle}</h2>
           </div>
           <div className="mt-10 grid gap-x-12 gap-y-8 md:grid-cols-2">
             {c.faq.map((f) => (
@@ -264,12 +257,9 @@ export default async function BundlesPage() {
       <section className="bg-party-red text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-2">
           <div className="reveal">
-            <p className="eyebrow text-white/80">Not sure what you need?</p>
-            <h2 className="section-title mt-3">We'll help you pick.</h2>
-            <p className="mt-4 max-w-md text-lg text-white/90">
-              Tell us about your event and we'll recommend the perfect package —
-              or build a custom one. Check your delivery rate while you're here.
-            </p>
+            <p className="eyebrow text-white/80">{c.ctaEyebrow}</p>
+            <h2 className="section-title mt-3">{c.ctaTitle}</h2>
+            <p className="mt-4 max-w-md text-lg text-white/90">{c.ctaBody}</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/contact" className="btn-yellow">
                 Ask a Question
