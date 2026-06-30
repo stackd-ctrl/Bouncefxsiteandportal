@@ -16,6 +16,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
     "/reviews",
     "/blog",
+    "/documents",
+    "/privacy",
+    "/terms",
   ];
   const now = "2026-06-04";
 

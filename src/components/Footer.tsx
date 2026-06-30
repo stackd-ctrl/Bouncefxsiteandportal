@@ -167,7 +167,25 @@ export default function Footer({
             f
           </a>
         </div>
-        <p className="mt-8 text-xs text-party-ink/50">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-semibold text-party-ink/60">
+          <Link href="/privacy" className="hover:text-party-red">
+            Privacy Policy
+          </Link>
+          <span className="text-party-ink/30">·</span>
+          <Link href="/terms" className="hover:text-party-red">
+            Terms of Service
+          </Link>
+          <span className="text-party-ink/30">·</span>
+          <a
+            href="/rental-agreement.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-party-red"
+          >
+            Rental Agreement
+          </a>
+        </div>
+        <p className="mt-3 text-xs text-party-ink/50">
           © {new Date().getFullYear()} Bounce FX Party Rentals ·{" "}
           {footer.closingTagline}
         </p>
