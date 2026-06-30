@@ -146,6 +146,10 @@ export async function POST(req: Request) {
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         customer_email: customerEmail,
+        // Lets customers enter a promotion code (e.g. the admin comp code) on
+        // the Stripe-hosted checkout page. A 100%-off code yields a $0 session
+        // that still completes and fires checkout.session.completed.
+        allow_promotion_codes: true,
         line_items: [
           {
             quantity: 1,
