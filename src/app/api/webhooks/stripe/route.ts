@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { createAdminSupabase, supabaseConfigured } from "@/lib/supabase/server";
-import { sendBookingConfirmation } from "@/lib/email";
+import {
+  sendBookingConfirmation,
+  sendOwnerBookingNotification,
+} from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -55,16 +58,33 @@ export async function POST(req: Request) {
           .single();
 
         if (booking) {
+          const items = `${booking.product_ids?.length ?? 0} item(s)`;
           await sendBookingConfirmation({
             to: booking.customer_email,
             customerName: booking.customer_name,
             eventDate: booking.event_date,
-            items: `${booking.product_ids?.length ?? 0} item(s)`,
+            items,
             total: Number(booking.total_amount),
             deposit: Number(booking.deposit_amount),
             deliveryFee: Number(booking.delivery_fee),
             confirmationNumber: booking.confirmation_number ?? undefined,
             orderNumber: booking.order_number ?? undefined,
+            eventAddress: booking.event_address ?? undefined,
+          });
+          // Notify the business + add the booking to their calendar.
+          await sendOwnerBookingNotification({
+            to: booking.customer_email,
+            customerName: booking.customer_name,
+            customerEmail: booking.customer_email,
+            customerPhone: booking.customer_phone ?? undefined,
+            eventDate: booking.event_date,
+            items,
+            total: Number(booking.total_amount),
+            deposit: Number(booking.deposit_amount),
+            deliveryFee: Number(booking.delivery_fee),
+            confirmationNumber: booking.confirmation_number ?? undefined,
+            orderNumber: booking.order_number ?? undefined,
+            eventAddress: booking.event_address ?? undefined,
           });
         }
       } catch {
@@ -72,9 +92,11 @@ export async function POST(req: Request) {
       }
     } else if (session.customer_details?.email) {
       // No persistence — still send a confirmation if we can.
+      const customerEmail = session.customer_details.email;
+      const customerName = session.customer_details.name ?? "there";
       await sendBookingConfirmation({
-        to: session.customer_details.email,
-        customerName: session.customer_details.name ?? "there",
+        to: customerEmail,
+        customerName,
         eventDate: meta.event_date ?? "",
         items: "your selected items",
         total: Number(meta.total_amount ?? 0),
@@ -82,7 +104,24 @@ export async function POST(req: Request) {
         deliveryFee: Number(meta.delivery_fee ?? 0),
         confirmationNumber: meta.confirmation_number || undefined,
         orderNumber: meta.order_number || undefined,
+        eventAddress: meta.event_address || undefined,
       });
+      if (meta.event_date) {
+        await sendOwnerBookingNotification({
+          to: customerEmail,
+          customerName,
+          customerEmail,
+          customerPhone: session.customer_details.phone ?? undefined,
+          eventDate: meta.event_date,
+          items: "your selected items",
+          total: Number(meta.total_amount ?? 0),
+          deposit: Number(meta.deposit_amount ?? 0),
+          deliveryFee: Number(meta.delivery_fee ?? 0),
+          confirmationNumber: meta.confirmation_number || undefined,
+          orderNumber: meta.order_number || undefined,
+          eventAddress: meta.event_address || undefined,
+        });
+      }
     }
   }
 
