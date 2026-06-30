@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { getProducts, getBundles } from "@/lib/catalog";
 import { getDeliveryQuote } from "@/lib/delivery";
 import {
@@ -22,6 +23,7 @@ interface CheckoutBody {
   specialRequests?: string;
   paymentChoice?: PaymentChoice;
   amountToPay?: number;
+  promoCode?: string;
 }
 
 export async function POST(req: Request) {
@@ -44,6 +46,7 @@ export async function POST(req: Request) {
     specialRequests = "",
     paymentChoice = "deposit",
     amountToPay,
+    promoCode,
   } = body;
 
   if (!eventDate || !customerName || !customerEmail || !eventAddress) {
@@ -143,13 +146,10 @@ export async function POST(req: Request) {
   if (stripeConfigured) {
     try {
       const stripe = getStripe();
-      const session = await stripe.checkout.sessions.create({
+
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
         mode: "payment",
         customer_email: customerEmail,
-        // Lets customers enter a promotion code (e.g. the admin comp code) on
-        // the Stripe-hosted checkout page. A 100%-off code yields a $0 session
-        // that still completes and fires checkout.session.completed.
-        allow_promotion_codes: true,
         line_items: [
           {
             quantity: 1,
@@ -168,14 +168,41 @@ export async function POST(req: Request) {
           order_number: orderNumber != null ? String(orderNumber) : "",
           confirmation_number: confirmationNumber ?? "",
           event_date: eventDate,
+          event_address: eventAddress,
           total_amount: String(total),
           deposit_amount: String(amountPaid),
           delivery_fee: String(deliveryFee),
           payment_type: paymentType,
+          promo_code: promoCode?.trim() || "",
         },
         success_url: `${siteUrl}/book/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/book?canceled=1`,
-      });
+      };
+
+      // Promo code: if the customer typed a real, active code, pre-apply it so
+      // they see the discount immediately. If it's blank or unrecognized, fall
+      // back to Stripe's own promo field so they can still enter one. (Stripe
+      // forbids setting both `discounts` and `allow_promotion_codes`.)
+      const code = promoCode?.trim();
+      if (code) {
+        try {
+          const found = await stripe.promotionCodes.list({
+            code,
+            active: true,
+            limit: 1,
+          });
+          if (found.data.length > 0) {
+            sessionParams.discounts = [{ promotion_code: found.data[0].id }];
+          }
+        } catch {
+          /* lookup failed — fall through to manual entry */
+        }
+      }
+      if (!sessionParams.discounts) {
+        sessionParams.allow_promotion_codes = true;
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
       return NextResponse.json({ url: session.url });
     } catch (e) {
       return NextResponse.json(

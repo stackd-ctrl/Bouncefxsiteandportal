@@ -45,6 +45,7 @@ export default function QuickCheckout({
   const [agreed, setAgreed] = useState(false);
   const [payChoice, setPayChoice] = useState<PaymentChoice>("deposit");
   const [customAmount, setCustomAmount] = useState<number | "">("");
+  const [promoCode, setPromoCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,6 +126,7 @@ export default function QuickCheckout({
           eventType: form.eventType,
           paymentChoice: payChoice,
           amountToPay,
+          promoCode: promoCode.trim() || undefined,
           specialRequests: [
             form.specialRequests,
             `[Rental agreement accepted at quick checkout on ${todayISO()}]`,
@@ -353,6 +355,21 @@ export default function QuickCheckout({
             />
             <div className="my-2 border-t border-dashed border-party-ink/20" />
             <Row label="Total" value={money(total)} bold />
+          </div>
+
+          {/* Promo code */}
+          <div className="mt-5">
+            <label className="field-label">Promo code</label>
+            <input
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              placeholder="Have a code? Enter it here"
+              autoCapitalize="characters"
+              className="field uppercase placeholder:normal-case placeholder:text-party-ink/40"
+            />
+            <p className="mt-1 text-xs text-party-ink/45">
+              Discount is applied at the payment step.
+            </p>
           </div>
 
           {/* Payment choice */}

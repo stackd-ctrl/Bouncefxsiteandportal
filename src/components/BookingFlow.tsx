@@ -63,6 +63,7 @@ export default function BookingFlow({
   const [signature, setSignature] = useState("");
   const [payChoice, setPayChoice] = useState<PaymentChoice>("deposit");
   const [customAmount, setCustomAmount] = useState<number | "">("");
+  const [promoCode, setPromoCode] = useState("");
 
   const bundle = useMemo(
     () => bundles.find((b) => b.id === selectedBundle) ?? null,
@@ -131,6 +132,7 @@ export default function BookingFlow({
           eventDate: date,
           paymentChoice: payChoice,
           amountToPay,
+          promoCode: promoCode.trim() || undefined,
           ...form,
           specialRequests: [
             form.specialRequests,
@@ -514,6 +516,24 @@ export default function BookingFlow({
                   </p>
                 )}
               </div>
+            </div>
+
+            {/* Promo code */}
+            <div className="rounded-2xl border border-party-ink/15 bg-white p-5">
+              <h3 className="font-display text-lg font-bold italic">
+                Promo code
+              </h3>
+              <input
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="Have a code? Enter it here"
+                autoCapitalize="characters"
+                className="field mt-2 uppercase placeholder:normal-case placeholder:text-party-ink/40"
+              />
+              <p className="mt-1.5 text-xs text-party-ink/55">
+                Got a promo? Enter it and the discount is applied at the secure
+                payment step.
+              </p>
             </div>
 
             {/* Payment amount */}
