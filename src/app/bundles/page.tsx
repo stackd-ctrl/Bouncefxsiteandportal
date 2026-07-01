@@ -18,9 +18,22 @@ export const metadata: Metadata = {
 
 type Cell = string | boolean;
 
-// Columns are in the same order as the BUNDLES catalog: Small, Medium, Large, Tent.
+// The comparison table (rows + pricing below) is authored in this fixed order.
+// NOTE: getBundles() returns bundles ordered by price, which is NOT this order —
+// so we match bundles to columns by name (see `bundleForColumn`) rather than by
+// array position, keeping the Book buttons under the right columns.
 const COLUMNS = ["Small", "Medium", "Large", "Tent Deal"];
 const FEATURED_COL = 1; // Medium = most popular
+
+// Canonical package rank by the first word of the bundle name, so cards and
+// table columns stay in Small → Medium → Large → Tent order regardless of the
+// order getBundles() returns them in. Custom/owner bundles fall to the end.
+const PACKAGE_ORDER = ["small", "medium", "large", "tent"];
+function packageRank(name?: string): number {
+  const first = (name ?? "").trim().toLowerCase().split(" ")[0];
+  const i = PACKAGE_ORDER.indexOf(first);
+  return i === -1 ? PACKAGE_ORDER.length : i;
+}
 
 const COMPARISON_ROWS: { label: string; cells: Cell[] }[] = [
   { label: "Bounce house", cells: ["1", "1", "1", false] },
@@ -56,10 +69,24 @@ function CellValue({ value }: { value: Cell }) {
 }
 
 export default async function BundlesPage() {
-  const [bundles, c] = await Promise.all([
+  const [bundlesRaw, c] = await Promise.all([
     getBundles(),
     getPages().then((p) => p.bundles),
   ]);
+
+  // Show cards in canonical Small → Medium → Large → Tent order.
+  const bundles = [...bundlesRaw].sort(
+    (a, b) => packageRank(a.name) - packageRank(b.name)
+  );
+
+  // Match each comparison column to its bundle by name so the Book buttons line
+  // up with the headers even though getBundles() is ordered by price.
+  const bundleForColumn = (col: string) => {
+    const key = col.trim().toLowerCase().split(" ")[0];
+    return bundles.find(
+      (b) => (b.name ?? "").trim().toLowerCase().split(" ")[0] === key
+    );
+  };
 
   return (
     <>
@@ -76,7 +103,7 @@ export default async function BundlesPage() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="grid gap-7 lg:grid-cols-3">
             {bundles.map((b) => (
-              <div key={b.id} className="reveal">
+              <div key={b.id} className="reveal h-full">
                 <BundleCard bundle={b} featured={b.tier === "silver"} />
               </div>
             ))}
@@ -189,16 +216,20 @@ export default async function BundlesPage() {
                 </tr>
                 <tr>
                   <td />
-                  {bundles.map((b) => (
-                    <td key={b.id} className="px-4 pt-4 text-center">
-                      <Link
-                        href={`/book?bundle=${b.id}`}
-                        className="btn-red btn-pill !px-5 !py-2.5 !text-sm"
-                      >
-                        Book {b.name?.split(" ")[0]}
-                      </Link>
-                    </td>
-                  ))}
+                  {COLUMNS.map((col) => {
+                    const b = bundleForColumn(col);
+                    const label = col.split(" ")[0]; // Small / Medium / Large / Tent
+                    return (
+                      <td key={col} className="px-4 pt-4 text-center">
+                        <Link
+                          href={b ? `/book?bundle=${b.id}` : "/book"}
+                          className="btn-red btn-pill !px-5 !py-2.5 !text-sm"
+                        >
+                          Book {label}
+                        </Link>
+                      </td>
+                    );
+                  })}
                 </tr>
               </tbody>
             </table>

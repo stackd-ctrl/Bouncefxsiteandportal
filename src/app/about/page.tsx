@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { readContent } from "@/lib/content";
+import DeliveryCalculator from "@/components/DeliveryCalculator";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -94,7 +95,7 @@ export default async function AboutPage() {
 
       {/* Service area — red block */}
       <section className="bg-party-red text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[1.4fr_1fr]">
           <div className="reveal">
             <p className="eyebrow text-white/80">{c.serviceAreaEyebrow}</p>
             <h2 className="section-title mt-3">{c.serviceAreaTitle}</h2>
@@ -103,6 +104,10 @@ export default async function AboutPage() {
             </p>
             <p className="mt-4 font-display text-lg font-semibold italic">
               {c.serviceAreaNote}
+            </p>
+            <p className="mt-2 text-sm text-white/80">
+              Not sure if we reach you? Use the delivery calculator to get your
+              exact rate in seconds.
             </p>
           </div>
           <div className="reveal grid grid-cols-2 gap-3">
@@ -114,6 +119,13 @@ export default async function AboutPage() {
                 {city}
               </span>
             ))}
+          </div>
+        </div>
+
+        {/* Delivery calculator */}
+        <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-20">
+          <div className="reveal mx-auto max-w-xl">
+            <DeliveryCalculator />
           </div>
         </div>
       </section>

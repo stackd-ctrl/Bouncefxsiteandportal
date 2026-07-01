@@ -334,16 +334,18 @@ export const DEFAULT_PAGES: PagesContent = {
     serviceAreaEyebrow: "Service area",
     serviceAreaTitle: "Proudly serving the DMV",
     serviceAreaBody:
-      "Home base is Fredericksburg, VA (22401). We deliver to families, schools, churches, HOAs, and community events throughout Stafford, Spotsylvania, King George, and the surrounding areas.",
+      "Home base is Fredericksburg, VA (22401), but our trucks run all over the DMV — up through Northern Virginia into Washington, DC and the Maryland suburbs. If you're within about 100 miles, we'll get bounce houses, tents and seating to your celebration.",
     serviceAreaNote:
       "Free delivery within 15 miles · $2/mile beyond · Same-day available",
     cities: [
       "Fredericksburg",
-      "Stafford",
-      "Spotsylvania",
-      "King George",
       "Woodbridge",
       "Manassas",
+      "Fairfax",
+      "Alexandria",
+      "Arlington",
+      "Washington, DC",
+      "Bethesda, MD",
     ],
   },
   services: {

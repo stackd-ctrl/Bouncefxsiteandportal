@@ -29,10 +29,10 @@ export default function BundleCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-3xl p-8 shadow-card transition-transform duration-300 ${
+      className={`relative flex h-full flex-col rounded-3xl p-8 ${
         featured
-          ? "bg-party-red text-white lg:-translate-y-3"
-          : "bg-white text-party-ink"
+          ? "bg-party-red text-white shadow-xl"
+          : "bg-white text-party-ink shadow-card"
       }`}
     >
       {bundle.badge ? (

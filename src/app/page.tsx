@@ -24,6 +24,19 @@ export default async function HomePage() {
   const c = pages.home;
   const featured = products.slice(0, 6);
 
+  // getBundles() is price-ordered; show the home trio in Small → Medium → Large
+  // order (featured Medium sits in the middle) rather than the price shuffle.
+  const HOME_BUNDLE_ORDER = ["small", "medium", "large", "tent"];
+  const homeBundleRank = (name?: string) => {
+    const i = HOME_BUNDLE_ORDER.indexOf(
+      (name ?? "").trim().toLowerCase().split(" ")[0]
+    );
+    return i === -1 ? HOME_BUNDLE_ORDER.length : i;
+  };
+  const homeBundles = [...bundles]
+    .sort((a, b) => homeBundleRank(a.name) - homeBundleRank(b.name))
+    .slice(0, 3);
+
   return (
     <>
       {/* ───────────── HERO ───────────── */}
@@ -122,9 +135,9 @@ export default async function HomePage() {
             <h2 className="section-title mt-3">{c.bundlesTitle}</h2>
             <p className="mt-4 text-lg text-party-ink/70">{c.bundlesSub}</p>
           </div>
-          <div className="mt-14 grid gap-7 lg:grid-cols-3">
-            {bundles.slice(0, 3).map((b) => (
-              <div key={b.id} className="reveal">
+          <div className="mt-14 grid items-stretch gap-7 lg:grid-cols-3">
+            {homeBundles.map((b) => (
+              <div key={b.id} className="reveal h-full">
                 <BundleCard bundle={b} featured={b.tier === "silver"} />
               </div>
             ))}
