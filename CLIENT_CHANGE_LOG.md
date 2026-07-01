@@ -13,14 +13,13 @@ Backend (Supabase + Resend + Stripe live) is verified working and the production
 Vercel site is up.** The only remaining items are user/client actions, not code:
 
 **Blocking launch (user must do):**
-- **Vercel prod env parity** — confirm `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_*`, live Stripe keys, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` (+ optional `OWNER_CALENDAR_EMAIL`) are all set in Vercel Production and redeploy. (Local `.env.local` keys are verified good; Vercel parity is the one unverified piece.)
+- **Vercel prod env parity** — client **confirmed Vercel env is set** (2026-06-30). Keep `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_*`, live Stripe keys, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` (+ optional `OWNER_CALENDAR_EMAIL`) in sync on any future key rotation.
 - **Custom domain cutover** — point `bouncefxpartyrentals.com` DNS to Vercel.
 
 **Optional / not blocking (works without them via fallbacks or is an add-on):**
-- **Google Maps API key** (#14) — still a placeholder; exact any-address delivery distance is disabled but the offline ZIP-region fallback covers the DMV. Add the key to enable precise mileage.
-- **Client content** — product spec copy (#3/#8), more blog articles (#4), exact Google Maps reviews profile URL for the "Read all reviews" link (#5). Privacy/Terms copy review (#2).
-- **Live Google reviews auto-pull** (#5 add-on) — Places API key + billing; the 4 real reviews are already shown statically.
-- **#21 spacing/condense polish** — optional visual pass; can be done on request.
+- **Google Maps API key** (#14) — **no longer needed for address validation** (that now uses free OpenStreetMap geocoding, #29). The Maps key only adds *exact driving-distance* mileage; without it the geocoded-coordinate + ZIP-region estimate covers the DMV.
+- **Client content** — product spec copy (#3/#8), more blog articles (#4), Privacy/Terms copy review (#2). _(Reviews profile URL #5 now resolved.)_
+- **Live Google reviews auto-pull** (#5 add-on) — Places API key + billing; the 4 real reviews are already shown statically and the "Read all reviews" link now points at the real profile.
 
 **How to read the columns**
 - **Size** — rough effort: `XS` (minutes), `S` (≤½ day), `M` (1–2 days), `L` (multi-day / new system).
@@ -40,7 +39,7 @@ Vercel site is up.** The only remaining items are user/client actions, not code:
 | 2 | Documents page — agreements, privacy, terms | M | Watch | **Done** | Dedicated `/documents` hub + `/privacy` + `/terms` pages shipped (commit `521e406`, live on prod), linking the signed `rental-agreement.pdf`; footer legal links + sitemap entries added. Privacy/Terms use standard party-rental boilerplate — **client should review the copy** and send any edits, but nothing is blocked. Agreement PDF still linked from the booking e-sign step + sendable per-booking from admin. |
 | 3 | Add measurements & specs to products | S | Build | Backlog | Data/content per product; surface on product cards/pages. |
 | 4 | Add more blog articles | S–M | Build | Backlog | Content volume depends on # of articles client supplies. |
-| 5 | Google reviews live + link out to leave a review | M | **Add-on** | **Partial** | Client's 4 real Google reviews (5.0★) added by hand to `REVIEWS` in `src/lib/data.ts` + shown on home + /reviews, replacing the fabricated testimonials; "Read all reviews on Google" link-out added (`GOOGLE_REVIEWS_URL` — ⚠️ currently a Google **search** URL, needs the exact Google Maps profile link from client). Remaining add-on = the *live auto-pull* via Google Places API (key + billing + caching). (2026-06-22) |
+| 5 | Google reviews live + link out to leave a review | M | **Add-on** | **Partial** | Client's 4 real Google reviews (5.0★) added by hand to `REVIEWS` in `src/lib/data.ts` + shown on home + /reviews, replacing the fabricated testimonials; "Read all reviews on Google" link-out now points at the **real Bounce FX Google Business profile** (kgmid `/g/11zbr8kym4`, from the client's share.google link, resolved 2026-06-30) → `GOOGLE_REVIEWS_URL`. Remaining add-on = the *live auto-pull* via Google Places API (key + billing + caching). (2026-06-30) |
 | 6 | Calendar links + booking notifications | M | Watch | **Done** | `lib/calendar.ts` builds all-day `.ics` + Google Calendar links (commit `db71441`). Booking-confirmation email now has an "Add to Google Calendar" button + `.ics` attachment; new `sendOwnerBookingNotification` emails the business a booking summary + a REQUEST `.ics` invite that auto-drops into their Google Calendar. Owner routing via `OWNER_CALENDAR_EMAIL` (defaults to `Info@bouncefxpartyrentals.com`). |
 | 7 | "Follow the fun" scrolling feature is broken | S | Build | **Done** | Root cause: `prefers-reduced-motion` CSS froze the marquees. Exempted the decorative brand marquees so they keep scrolling. (2026-06-18) |
 | 8 | Bounce house has dual slides, basketball hoops, climbing walls, wet or dry | XS | Build | Backlog | Product description/spec copy (overlaps #3). **Needs client to supply the spec text.** |
@@ -56,7 +55,7 @@ Vercel site is up.** The only remaining items are user/client actions, not code:
 | 18 | "Build Your Party" form — update for ease of use + correct info | S–M | Build | **Done** | Occasion now drives the recommendation (seating/shade/inflatable sizing) + explainer; clearer labeling. (2026-06-18) |
 | 19 | Admin can add more products, photos, adjust inventory, etc. | M–L | Watch | **Done** | Done 2026-06-22: (a) **inventory amounts** — every product now has a "Qty owned" field in admin Products; (b) **add/delete custom products** (name, category, price, qty, description, photos, availability) → show on Shop immediately; (c) **add/delete custom bundles** (name, price, compare-at, badge, what's-included lines, item picker, photos) → show on Bundles immediately. Stored in the content store (`customProducts`/`customBundles` + `quantity` override); catalog appends them everywhere. Verified e2e locally. Supabase now connected (#1 Done 2026-06-30) → admin edits **persist live** via the `site_content` row + `media` bucket. |
 | 20 | "Will it fit" — let user choose units (sq ft, inches, ft, etc.) | S | Build | **Done** | Unit toggle (ft/in/yd/m) + conversions in SpaceChecker. (2026-06-18) |
-| 21 | Some empty spaces — condense a bit | S | Build | Backlog | Spacing/layout polish across pages. |
+| 21 | Some empty spaces — condense a bit | S | Build | **Done** | Standardized interior section padding to `py-16 md:py-20` (was `py-20 md:py-28` on home, `py-16 md:py-24` on subpages) so stacked sections no longer leave large empty bands. Home/services/contact/bundles/city/PageHeader. (2026-06-30) |
 
 ---
 
@@ -95,3 +94,14 @@ deploy the site with the admin portal — treated as core Build, not add-on.
 ### Scope summary (Batch 2)
 - **Build (in fixed price):** #22 (part of #1), #23, #25
 - **Add-on:** #24 (live Google auto-pull only; manual reviews were free)
+
+---
+
+## Batch 3 — requested 2026-06-30
+
+| # | Request | Size | Scope | Status | Notes |
+|---|---------|------|-------|--------|-------|
+| 29 | Require real delivery addresses (junk like "123 akjhjkda" was accepted) | S | Build | **Done** | Event address is now **geocoded** (OpenStreetMap Nominatim — free, no API key) to confirm it's a real, deliverable street address before the booking can proceed. `getDeliveryQuote` returns `valid` (true / false / null) + `resolvedAddress`; a real address also gets a fee estimated from its actual coordinates. Booking flow + Quick Checkout validate as you type (debounced), show "✓ Delivering to …" or a red "we couldn't find that address — call/text 571-264-9996" message, and gate submit. `/api/checkout` **hard-rejects** a confirmed-junk address server-side before Stripe. Fails open to a light format check only if the geocoder is unreachable, so a real customer is never blocked by an outage. (2026-06-30) |
+
+### Scope summary (Batch 3)
+- **Build (in fixed price):** #29
