@@ -105,3 +105,36 @@ deploy the site with the admin portal — treated as core Build, not add-on.
 
 ### Scope summary (Batch 3)
 - **Build (in fixed price):** #29
+
+---
+
+## Batch 4 — requested 2026-06-30 (evening) — bundle + admin polish
+
+**Done this session (pushed):**
+
+| # | Request | Size | Scope | Status | Notes |
+|---|---------|------|-------|--------|-------|
+| 30 | Bundle table Book buttons misaligned; verify info | S | Build | **Done** | Buttons now match their column headers (getBundles is price-ordered → match by name). Table data verified correct. (`e32737e`) |
+| 31 | Bundle cards not aligned on one line | S | Build | **Done** | Equal-height cards (`h-full`), dropped the featured card's vertical offset; red bg + badge still distinguish it. (`e32737e`) |
+| 32 | About page: broaden DMV cities, drop Stafford/Spotsy, link calculator | S | Build | **Done** | Now lists Northern VA / DC / MD cities and embeds the delivery calculator. (`e32737e`) |
+| 33 | Party Planner chat AI avatar icon | XS | Build | **Done** | Custom avatar cropped from client image → launcher + chat header. (`e17eb88`) |
+| 34 | Admin: real logo instead of red "FX" box | XS | Build | **Done** | Sidebar shows the Bounce FX logo. (`e17eb88`) |
+| 35 | Admin: dashboard overview page + "Hello <name>" + editable profile name (not on site) | M | Build | **Done** | New Dashboard tab (default): greeting + stat cards + upcoming/recent/leads + quick links. Per-admin profile in Settings → "Your profile"; never shown publicly. (`e17eb88`) |
+| 36 | Admin: delete bookings (clear test data) | S | Build | **Done** | Per-booking delete already existed; added "Delete all archived" bulk action. (`e17eb88`) |
+| 37 | Order numbers = 5 digits | XS | Build | **Done (needs SQL run)** | Plain 5-digit, incrementing (client chose plain over letter-prefix). Run `supabase/order_number_5digit.sql` in Supabase to restart the identity at 40318. (`e17eb88`) |
+
+**Punch list — TODO tomorrow (2026-07-01):**
+
+| # | Request | Size | Scope | Status | Notes |
+|---|---------|------|-------|--------|-------|
+| 38 | Full **dark mode** across the whole admin portal + toggle | M–L | Build | **Backlog** | Toggle in portal/settings; theme every panel/table/form/drawer. Tailwind `dark:` on the AdminPortal root so it stays admin-only (public site unaffected). Client chose full (not shell-only). |
+| 39 | **Billing page** mirroring live Stripe (read-only) | M | Add-on | **Backlog** | Pull real coupons/charges via the Stripe API and display in the admin. Client chose "mirror Stripe" over editable in-app lists. |
+| 40 | A dedicated **Archive** area for archived items | S | Build | **Backlog** | Give archived bookings (and leads?) a clear home instead of only the "Archived" status filter. |
+| 41 | **Reviews → Google** + completion email | M | Build | **Backlog** | Add a "Leave us a Google review" button linking to the Google profile. Send it in a **thank-you email after the booking is marked complete** — admin marks a booking "complete" → email auto-sends with the review button. |
+| 42 | Real **e-signature** on the rental agreement (DocuSign-style) | M–L | **Discuss** | **Backlog** | Currently the agreement is a typed-name + checkbox appended to the booking. Options to discuss: (a) lightweight built-in — draw/type signature, timestamp + IP, generate a signed PDF, store it, email a copy (no third party, in-scope-ish); (b) DocuSign/Dropbox Sign API integration (legally-robust audit trail, but a paid account + integration = add-on). Chat first, then build. |
+| 43 | **Address autocomplete** dropdown while typing | S–M | Build | **Backlog** | Suggestions as the customer types in booking/checkout address fields. Free path (Photon/Nominatim) needs **no key**; Google Places autocomplete needs the Google Maps API key + Places API + billing. Awaiting client preference (see #4 answer). |
+
+### Scope summary (Batch 4)
+- **Build (in fixed price):** #30, #31, #32, #33, #34, #35, #36, #37, #38, #40, #41, #43
+- **Add-on:** #39 (Stripe mirror)
+- **Discuss before building:** #42 (e-signature)
