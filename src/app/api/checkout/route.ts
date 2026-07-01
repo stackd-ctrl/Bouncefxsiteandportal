@@ -89,6 +89,19 @@ export async function POST(req: Request) {
 
   // ── Delivery (recomputed server-side from the event address) ──
   const delivery = await getDeliveryQuote(eventAddress);
+
+  // Reject a confirmed-junk address (geocoder found no match). `null` means the
+  // geocoder was unavailable — don't block a real customer over an outage.
+  if (delivery.valid === false) {
+    return NextResponse.json(
+      {
+        error:
+          "We couldn't verify that delivery address. Please enter a complete street address, city, and ZIP.",
+      },
+      { status: 400 }
+    );
+  }
+
   const deliveryFee = delivery.fee;
 
   const total = Math.round((subtotal + deliveryFee) * 100) / 100;

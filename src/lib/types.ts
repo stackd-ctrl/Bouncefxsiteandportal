@@ -82,4 +82,12 @@ export interface DeliveryQuote {
   origin: string;
   destination: string;
   estimated: boolean;
+  /**
+   * Whether the address resolved to a real place via geocoding.
+   * `true` = verified real address, `false` = geocoder found no match (junk),
+   * `null`/undefined = geocoder was unavailable (fail open, use format check).
+   */
+  valid?: boolean | null;
+  /** Human-readable resolved address when `valid` is true. */
+  resolvedAddress?: string;
 }

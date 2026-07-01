@@ -139,15 +139,85 @@ export function estimateFromZip(zip: string): DeliveryQuote | null {
 }
 
 /**
- * Get a delivery quote. Uses the Google Distance Matrix API for real driving
- * distance when GOOGLE_MAPS_API_KEY is set, otherwise falls back to the ZIP
- * estimate. Runs server-side only.
+ * Geocode a free-form address to confirm it's a REAL, deliverable street address
+ * (not junk like "123 asdf"). Uses OpenStreetMap Nominatim — free, no API key —
+ * and only accepts a hit that resolves to an actual road/street.
+ *
+ * Returns a discriminated outcome so callers can tell the difference between
+ * "geocoder said no match" (block the booking) and "geocoder was unreachable"
+ * (fail open — don't block a real customer because of an outage).
+ */
+type GeoOutcome =
+  | { status: "ok"; lat: number; lng: number; label: string; zip: string | null }
+  | { status: "notfound" }
+  | { status: "unavailable" };
+
+// Small in-memory cache so repeated blur/type/review checks for the same
+// address don't re-hit Nominatim (also respects its fair-use policy).
+const geoCache = new Map<string, GeoOutcome>();
+
+async function geocodeAddress(address: string): Promise<GeoOutcome> {
+  const cacheKey = address.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!cacheKey) return { status: "notfound" };
+  const cached = geoCache.get(cacheKey);
+  if (cached) return cached;
+
+  let outcome: GeoOutcome = { status: "unavailable" };
+  try {
+    const url = new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("countrycodes", "us");
+    url.searchParams.set("limit", "1");
+    url.searchParams.set("q", address);
+    const res = await fetch(url.toString(), {
+      headers: {
+        // Nominatim requires a descriptive UA identifying the app + contact.
+        "User-Agent":
+          "BounceFXPartyRentals/1.0 (+https://bouncefxpartyrentals.com; Info@bouncefxpartyrentals.com)",
+      },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const arr = await res.json();
+      const hit = Array.isArray(arr) ? arr[0] : null;
+      const road = hit?.address?.road ?? hit?.address?.pedestrian ?? null;
+      // Require an actual street — a bare city/ZIP match isn't a delivery address.
+      if (hit && road) {
+        outcome = {
+          status: "ok",
+          lat: parseFloat(hit.lat),
+          lng: parseFloat(hit.lon),
+          label: hit.display_name as string,
+          zip: hit.address?.postcode ?? null,
+        };
+      } else {
+        outcome = { status: "notfound" };
+      }
+    }
+  } catch {
+    outcome = { status: "unavailable" };
+  }
+  geoCache.set(cacheKey, outcome);
+  return outcome;
+}
+
+/**
+ * Get a delivery quote AND validate the address. Geocodes via Nominatim to
+ * confirm the address is real (`valid`), then computes the fee from real
+ * coordinates. Uses the Google Distance Matrix API for exact driving distance
+ * when GOOGLE_MAPS_API_KEY is set. Runs server-side only.
  */
 export async function getDeliveryQuote(
   destination: string
 ): Promise<DeliveryQuote> {
   const key = process.env.GOOGLE_MAPS_API_KEY;
   const cleaned = destination.trim();
+
+  const geo = await geocodeAddress(cleaned);
+  const valid: boolean | null =
+    geo.status === "ok" ? true : geo.status === "notfound" ? false : null;
+  const resolvedAddress = geo.status === "ok" ? geo.label : undefined;
 
   if (key) {
     try {
@@ -171,6 +241,8 @@ export async function getDeliveryQuote(
           origin: ORIGIN_LABEL,
           destination: cleaned,
           estimated: false,
+          valid,
+          resolvedAddress,
         };
       }
     } catch {
@@ -178,10 +250,31 @@ export async function getDeliveryQuote(
     }
   }
 
+  // No Google key but we geocoded real coordinates — estimate straight from them
+  // (more accurate than the ZIP-centroid table).
+  if (geo.status === "ok") {
+    const straight = haversineMiles(ORIGIN_COORDS, {
+      lat: geo.lat,
+      lng: geo.lng,
+    });
+    const miles = Math.round(straight * 1.25 * 10) / 10;
+    const { fee, free } = feeForMiles(miles);
+    return {
+      miles,
+      fee,
+      free,
+      origin: ORIGIN_LABEL,
+      destination: cleaned,
+      estimated: true,
+      valid,
+      resolvedAddress,
+    };
+  }
+
   const zip = extractZip(cleaned);
   if (zip) {
     const est = estimateFromZip(zip);
-    if (est) return est;
+    if (est) return { ...est, valid, resolvedAddress };
   }
 
   // Unknown location — default to a flat "contact us" style mid estimate.
@@ -192,5 +285,7 @@ export async function getDeliveryQuote(
     origin: ORIGIN_LABEL,
     destination: cleaned,
     estimated: true,
+    valid,
+    resolvedAddress,
   };
 }

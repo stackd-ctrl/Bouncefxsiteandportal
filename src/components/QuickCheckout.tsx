@@ -1,10 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import type { Product, Bundle, DeliveryQuote } from "@/lib/types";
 import { money, todayISO } from "@/lib/format";
 import { depositFor, amountDueNow, type PaymentChoice } from "@/lib/pricing";
+
+const SUPPORT_PHONE = "571-264-9996";
+
+// Fallback sanity check used ONLY when the geocoder is unreachable: require a
+// ZIP or a comma-separated address so obvious junk ("123 asdf") is still caught.
+function addressLooksComplete(input: string): boolean {
+  const s = input.trim();
+  if (/\b\d{5}\b/.test(s)) return true;
+  return s.split(",").map((p) => p.trim()).filter(Boolean).length >= 2;
+}
 
 const EVENT_TYPES = [
   "Birthday",
@@ -93,12 +103,32 @@ export default function QuickCheckout({
     }
   }
 
+  // Debounced address validation as the customer types.
+  useEffect(() => {
+    if (!form.eventAddress.trim()) {
+      setDelivery(null);
+      return;
+    }
+    const t = setTimeout(() => checkDelivery(), 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.eventAddress]);
+
+  // Accept the address only when the geocoder verified it (valid === true), or
+  // — only if the geocoder was unavailable — it at least looks complete. A
+  // confirmed "no match" (valid === false) blocks checkout.
+  const addressOk =
+    !!form.eventAddress.trim() &&
+    !!delivery &&
+    (delivery.valid === true ||
+      (delivery.valid == null && addressLooksComplete(form.eventAddress)));
+
   const canPay =
     itemCount > 0 &&
     !!form.customerName &&
     !!form.customerEmail &&
     !!form.customerPhone &&
-    !!form.eventAddress &&
+    addressOk &&
     !!form.eventDate &&
     agreed &&
     !submitting;
@@ -318,6 +348,25 @@ export default function QuickCheckout({
                 onChange={(e) => field({ eventAddress: e.target.value })}
                 onBlur={checkDelivery}
               />
+              {deliveryLoading && (
+                <p className="mt-1 text-xs text-party-ink/50">
+                  Checking address…
+                </p>
+              )}
+              {!deliveryLoading && delivery && delivery.valid === false && (
+                <p className="mt-1 text-xs font-semibold text-party-red">
+                  We couldn&apos;t find that address. Enter a complete street
+                  address, city, and ZIP — or call/text {SUPPORT_PHONE}.
+                </p>
+              )}
+              {!deliveryLoading &&
+                delivery &&
+                delivery.valid === true &&
+                delivery.resolvedAddress && (
+                  <p className="mt-1 text-xs text-party-green">
+                    ✓ {delivery.resolvedAddress}
+                  </p>
+                )}
             </div>
             <div className="sm:col-span-2">
               <label className="field-label">

@@ -16,6 +16,16 @@ const EVENT_TYPES = [
   "Other",
 ];
 
+const SUPPORT_PHONE = "571-264-9996";
+
+// Fallback sanity check used ONLY when the geocoder is unreachable: require a
+// ZIP or a comma-separated address so obvious junk ("123 asdf") is still caught.
+function addressLooksComplete(input: string): boolean {
+  const s = input.trim();
+  if (/\b\d{5}\b/.test(s)) return true;
+  return s.split(",").map((p) => p.trim()).filter(Boolean).length >= 2;
+}
+
 export default function BookingFlow({
   products,
   bundles,
@@ -119,6 +129,19 @@ export default function BookingFlow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // Debounced address validation on step 2 as the customer types, so the
+  // "Review booking" button enables itself once a real address resolves.
+  useEffect(() => {
+    if (step !== 2) return;
+    if (!form.eventAddress.trim()) {
+      setDelivery(null);
+      return;
+    }
+    const t = setTimeout(() => checkDelivery(), 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.eventAddress, step]);
+
   async function submit() {
     setSubmitting(true);
     setError(null);
@@ -157,12 +180,22 @@ export default function BookingFlow({
     }
   }
 
+  // Address is acceptable when the geocoder verified it (valid === true) or,
+  // only if the geocoder was unavailable (valid == null), it at least looks
+  // complete (has a ZIP or a comma-separated street/city). A confirmed "no
+  // match" (valid === false) blocks the booking.
+  const addressOk =
+    !!form.eventAddress.trim() &&
+    !!delivery &&
+    (delivery.valid === true ||
+      (delivery.valid == null && addressLooksComplete(form.eventAddress)));
+
   const canStep1 = hasSelection && !!date;
   const canStep2 =
     form.customerName &&
     form.customerEmail &&
     form.customerPhone &&
-    form.eventAddress;
+    addressOk;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -355,21 +388,35 @@ export default function BookingFlow({
               />
               {deliveryLoading && (
                 <p className="mt-1.5 text-sm text-party-ink/50">
-                  Calculating delivery…
+                  Checking address…
                 </p>
               )}
-              {delivery && (
-                <p
-                  className={`mt-1.5 text-sm font-semibold ${
-                    delivery.free ? "text-party-green" : "text-party-ink"
-                  }`}
-                >
-                  {delivery.free
-                    ? "Free delivery to this address!"
-                    : delivery.miles > 0
-                    ? `Estimated delivery fee: ${money(delivery.fee)}`
-                    : "We'll confirm your exact delivery rate — we deliver across the DMV."}
+              {!deliveryLoading && delivery && delivery.valid === false && (
+                <p className="mt-1.5 text-sm font-semibold text-party-red">
+                  We couldn&apos;t find that address. Please enter a complete
+                  street address, city, and ZIP — or call/text us at{" "}
+                  {SUPPORT_PHONE} and we&apos;ll set it up for you.
                 </p>
+              )}
+              {!deliveryLoading && delivery && delivery.valid !== false && (
+                <>
+                  <p
+                    className={`mt-1.5 text-sm font-semibold ${
+                      delivery.free ? "text-party-green" : "text-party-ink"
+                    }`}
+                  >
+                    {delivery.free
+                      ? "Free delivery to this address!"
+                      : delivery.miles > 0
+                      ? `Estimated delivery fee: ${money(delivery.fee)}`
+                      : "We'll confirm your exact delivery rate — we deliver across the DMV."}
+                  </p>
+                  {delivery.valid === true && delivery.resolvedAddress && (
+                    <p className="mt-0.5 text-xs text-party-green">
+                      ✓ Delivering to {delivery.resolvedAddress}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 

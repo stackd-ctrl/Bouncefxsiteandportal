@@ -261,10 +261,11 @@ export const REVIEWS: Review[] = [
   },
 ];
 
-// Link out to the Bounce FX Google reviews. TODO: swap for the exact Google Maps
-// profile URL (or "write a review" deep link) once the client provides it.
+// Bounce FX's Google Business Profile (knowledge-graph id /g/11zbr8kym4). Opens the
+// Google panel with reviews + a "Write a review" button. Source: client-supplied
+// share.google/iFTRU2TMDr1yF3mOs (resolved 2026-06-30).
 export const GOOGLE_REVIEWS_URL =
-  "https://www.google.com/search?q=Bounce+FX+Party+Rentals+Fredericksburg+VA+reviews";
+  "https://www.google.com/search?q=Bounce+FX+Party+Rentals&kgmid=/g/11zbr8kym4";
 
 export function getProductById(id: string): Product | undefined {
   return PRODUCTS.find((p) => p.id === id);
