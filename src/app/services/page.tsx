@@ -15,7 +15,7 @@ export default async function ServicesPage() {
     <>
       {/* Editorial header + service list — yellow */}
       <section className="bg-party-yellow text-party-ink">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-[1.1fr_1fr]">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[1.1fr_1fr]">
           <div className="reveal">
             <p className="eyebrow text-party-red">{c.eyebrow}</p>
             <h1 className="mt-4 whitespace-pre-line font-display text-5xl font-bold italic leading-[0.95] sm:text-6xl">
@@ -56,7 +56,7 @@ export default async function ServicesPage() {
 
       {/* Who we serve — cream */}
       <section className="bg-party-cream text-party-ink">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
             <p className="eyebrow text-party-red">{c.whoEyebrow}</p>
             <h2 className="section-title mt-3">{c.whoTitle}</h2>
@@ -76,7 +76,7 @@ export default async function ServicesPage() {
 
       {/* Promise — black */}
       <section className="bg-party-ink text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-24 md:grid-cols-3">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-20 md:grid-cols-3">
           {c.promise.map((p) => (
             <div key={p.title} className="reveal border-t-2 border-white/30 pt-5">
               <h3 className="font-display text-2xl font-bold italic text-party-yellow">

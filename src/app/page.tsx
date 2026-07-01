@@ -69,7 +69,7 @@ export default async function HomePage() {
 
       {/* ───────────── FEATURED PRODUCTS ───────────── */}
       <section className="bg-party-cream">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="eyebrow text-party-red">{c.featuredEyebrow}</p>
@@ -88,7 +88,7 @@ export default async function HomePage() {
 
       {/* ───────────── HOW IT WORKS ───────────── */}
       <section className="bg-party-yellow text-party-ink">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
             <p className="eyebrow text-party-red">{c.howEyebrow}</p>
             <h2 className="section-title mt-3">{c.howTitle}</h2>
@@ -116,7 +116,7 @@ export default async function HomePage() {
 
       {/* ───────────── BUNDLES ───────────── */}
       <section className="bg-party-cream">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
             <p className="eyebrow text-party-red">{c.bundlesEyebrow}</p>
             <h2 className="section-title mt-3">{c.bundlesTitle}</h2>
@@ -150,7 +150,7 @@ export default async function HomePage() {
 
       {/* ───────────── GALLERY ───────────── */}
       <section className="bg-party-cream">
-        <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 md:pb-28">
+        <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-20">
           <div className="reveal max-w-2xl">
             <p className="eyebrow text-party-red">{c.galleryEyebrow}</p>
             <h2 className="section-title mt-3">{c.galleryTitle}</h2>
@@ -163,7 +163,7 @@ export default async function HomePage() {
 
       {/* ───────────── REVIEWS ───────────── */}
       <section className="bg-party-yellow text-party-ink">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <div className="reveal max-w-2xl">
             <p className="eyebrow text-party-red">{c.testimonialsEyebrow}</p>
             <h2 className="section-title mt-3">{c.testimonialsTitle}</h2>
@@ -204,7 +204,7 @@ export default async function HomePage() {
 
       {/* ───────────── SERVING THE DMV + DELIVERY ───────────── */}
       <section id="delivery" className="scroll-mt-24 bg-party-red text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-2">
           <div className="reveal">
             <p className="eyebrow text-white/80">{c.deliveryEyebrow}</p>
             <h2 className="section-title mt-3">{c.deliveryTitle}</h2>
@@ -230,7 +230,7 @@ export default async function HomePage() {
 
       {/* ───────────── FINAL CTA ───────────── */}
       <section className="bg-black text-white">
-        <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 md:py-28">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 md:py-20">
           <div className="mx-auto mb-8 w-48">
             <Image
               src={media.logo}

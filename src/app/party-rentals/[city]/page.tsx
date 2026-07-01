@@ -46,7 +46,7 @@ export default async function CityPage({
   return (
     <>
       <section className="bg-party-red text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <p className="eyebrow text-white/80">Now serving {city.name}, {city.state}</p>
           <h1 className="mt-4 max-w-4xl font-display text-5xl font-bold italic leading-[0.95] sm:text-6xl md:text-7xl">
             Bounce House &amp; Party Rentals in {city.name}

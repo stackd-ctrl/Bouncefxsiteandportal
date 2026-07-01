@@ -17,7 +17,7 @@ export default async function ContactPage() {
   const FB = site.facebook;
   return (
     <section className="bg-party-red text-white">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
         <p className="eyebrow text-white/80">{c.eyebrow}</p>
         <div className="mt-6 grid gap-12 lg:grid-cols-[1fr_1.1fr]">
           {/* Left — pitch + info */}
