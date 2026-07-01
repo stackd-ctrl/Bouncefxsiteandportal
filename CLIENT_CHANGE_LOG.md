@@ -4,6 +4,24 @@
 client **from 2026-06-15 forward** so we can watch total scope and flag items
 that fall outside the original build (potential change-order / add-on work).
 
+---
+
+## 🚦 Launch readiness — status as of 2026-06-30
+
+**All development work is complete, committed, pushed (`main`), and typecheck-green.
+Backend (Supabase + Resend + Stripe live) is verified working and the production
+Vercel site is up.** The only remaining items are user/client actions, not code:
+
+**Blocking launch (user must do):**
+- **Vercel prod env parity** — confirm `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_*`, live Stripe keys, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` (+ optional `OWNER_CALENDAR_EMAIL`) are all set in Vercel Production and redeploy. (Local `.env.local` keys are verified good; Vercel parity is the one unverified piece.)
+- **Custom domain cutover** — point `bouncefxpartyrentals.com` DNS to Vercel.
+
+**Optional / not blocking (works without them via fallbacks or is an add-on):**
+- **Google Maps API key** (#14) — still a placeholder; exact any-address delivery distance is disabled but the offline ZIP-region fallback covers the DMV. Add the key to enable precise mileage.
+- **Client content** — product spec copy (#3/#8), more blog articles (#4), exact Google Maps reviews profile URL for the "Read all reviews" link (#5). Privacy/Terms copy review (#2).
+- **Live Google reviews auto-pull** (#5 add-on) — Places API key + billing; the 4 real reviews are already shown statically.
+- **#21 spacing/condense polish** — optional visual pass; can be done on request.
+
 **How to read the columns**
 - **Size** — rough effort: `XS` (minutes), `S` (≤½ day), `M` (1–2 days), `L` (multi-day / new system).
 - **Scope** —
@@ -18,12 +36,12 @@ that fall outside the original build (potential change-order / add-on work).
 
 | # | Request | Size | Scope | Status | Notes |
 |---|---------|------|-------|--------|-------|
-| 1 | Stand up backend: Supabase, Resend, update domains in Vercel | L | Build | Backlog | **In scope** — required to deploy the site with a working admin portal (persistence, emails, live admin saves). Not an add-on. Biggest-effort Build item. |
-| 2 | Documents page — agreements, privacy, terms | M | Watch | **Partial** | Client supplied the rental/safety agreement PDF (2026-06-22) → added at `/rental-agreement.pdf`: linked from the booking flow's e-sign step (customer can read full terms) + sendable per-booking from the admin ("Send agreement" pre-fills a customer email; "View PDF"). Remaining: dedicated Documents page + privacy/terms copy (still needs client text). |
+| 1 | Stand up backend: Supabase, Resend, update domains in Vercel | L | Build | **Done** | Backend live (verified 2026-06-30): Supabase anon + service_role keys work (REST 200); `site_content` table + `media` Storage bucket provisioned; Resend live (domain verified). Admin persistence + emails functional. Remaining launch step is user-side: confirm the same keys are in **Vercel prod env** + final domain cutover. |
+| 2 | Documents page — agreements, privacy, terms | M | Watch | **Done** | Dedicated `/documents` hub + `/privacy` + `/terms` pages shipped (commit `521e406`, live on prod), linking the signed `rental-agreement.pdf`; footer legal links + sitemap entries added. Privacy/Terms use standard party-rental boilerplate — **client should review the copy** and send any edits, but nothing is blocked. Agreement PDF still linked from the booking e-sign step + sendable per-booking from admin. |
 | 3 | Add measurements & specs to products | S | Build | Backlog | Data/content per product; surface on product cards/pages. |
 | 4 | Add more blog articles | S–M | Build | Backlog | Content volume depends on # of articles client supplies. |
 | 5 | Google reviews live + link out to leave a review | M | **Add-on** | **Partial** | Client's 4 real Google reviews (5.0★) added by hand to `REVIEWS` in `src/lib/data.ts` + shown on home + /reviews, replacing the fabricated testimonials; "Read all reviews on Google" link-out added (`GOOGLE_REVIEWS_URL` — ⚠️ currently a Google **search** URL, needs the exact Google Maps profile link from client). Remaining add-on = the *live auto-pull* via Google Places API (key + billing + caching). (2026-06-22) |
-| 6 | Calendar links + booking notifications | M | Watch | Backlog | ICS/Google Cal links (S) + notification emails on booking (needs Resend → ties to #1). |
+| 6 | Calendar links + booking notifications | M | Watch | **Done** | `lib/calendar.ts` builds all-day `.ics` + Google Calendar links (commit `db71441`). Booking-confirmation email now has an "Add to Google Calendar" button + `.ics` attachment; new `sendOwnerBookingNotification` emails the business a booking summary + a REQUEST `.ics` invite that auto-drops into their Google Calendar. Owner routing via `OWNER_CALENDAR_EMAIL` (defaults to `Info@bouncefxpartyrentals.com`). |
 | 7 | "Follow the fun" scrolling feature is broken | S | Build | **Done** | Root cause: `prefers-reduced-motion` CSS froze the marquees. Exempted the decorative brand marquees so they keep scrolling. (2026-06-18) |
 | 8 | Bounce house has dual slides, basketball hoops, climbing walls, wet or dry | XS | Build | Backlog | Product description/spec copy (overlaps #3). **Needs client to supply the spec text.** |
 | 9 | Add military discount to home page | XS | Build | **Done** | Military-discount pill under the home hero. (2026-06-18) |
@@ -32,11 +50,11 @@ that fall outside the original build (potential change-order / add-on work).
 | 12 | Add date & time of delivery to the booking form | S | Build | **Done** | Preferred delivery date + time fields; shown on review + carried into order notes. (2026-06-18) |
 | 13 | Flat **$50 deposit** everywhere, not 50% | S | Build | **Done** | New `lib/pricing.ts` (`depositFor`); checkout + BookingFlow + all copy updated. (2026-06-18) |
 | 14 | Service area = anywhere in the DMV; $2.00/mi applies **beyond 15 mi**; calculator must work for any ZIP | M | Watch | **Partial** | Added offline ZIP3-region fallback so any VA/MD/DC ZIP estimates; unknown ZIPs show "we'll confirm" not $0. **Exact any-address distance still needs the Google Maps key (ties to #1).** (2026-06-18) |
-| 15 | Lock the admin portal (real auth) | M | Watch | Backlog | Proper auth gate; ties to #1 (Supabase). More portal feature detail coming from client. |
-| 16 | Add Stripe for payments; set client as a developer | M | **Add-on** | Backlog | Live Stripe account + keys + checkout wiring; add client to Stripe team. |
+| 15 | Lock the admin portal (real auth) | M | Watch | **Done** | Real Supabase Auth login at `/admin/login` (`signInWithPassword`); `src/lib/auth.ts` **fails closed in production** (no demo bypass unless `ADMIN_DEMO=1`), grants access to `ADMIN_EMAIL` owner + a managed allow-list. Verified 2026-06-30: owner user `info@bouncefxpartyrentals.com` exists in Supabase Auth and can sign in. |
+| 16 | Add Stripe for payments; set client as a developer | M | **Add-on** | **Done** | Stripe **live** (2026-06-30): live keys wired, hosted-checkout deposit/full/partial flow, live webhook endpoint `we_1To5Q20zzgisUQtAEOCS9OVt` → `/api/webhooks/stripe` (`checkout.session.completed`) fires booking-confirmation email. Catalog seeded via `npm run stripe:seed`; admin comp code `ADMINFX2026` = 100% off. Remaining user step: confirm live Stripe keys + `STRIPE_WEBHOOK_SECRET` are in Vercel prod env. |
 | 17 | Photo cards dynamic — adjust to photos added, no white space | S–M | Build | **Done** | Gallery now uniform square auto-fill tiles — gap-free for any photo count. (2026-06-18) |
 | 18 | "Build Your Party" form — update for ease of use + correct info | S–M | Build | **Done** | Occasion now drives the recommendation (seating/shade/inflatable sizing) + explainer; clearer labeling. (2026-06-18) |
-| 19 | Admin can add more products, photos, adjust inventory, etc. | M–L | Watch | **Built (needs #1 to persist live)** | Done 2026-06-22: (a) **inventory amounts** — every product now has a "Qty owned" field in admin Products; (b) **add/delete custom products** (name, category, price, qty, description, photos, availability) → show on Shop immediately; (c) **add/delete custom bundles** (name, price, compare-at, badge, what's-included lines, item picker, photos) → show on Bundles immediately. Stored in the content store (`customProducts`/`customBundles` + `quantity` override); catalog appends them everywhere. Verified e2e locally. ⚠️ Persists to `content/site.json` locally but is **ephemeral on the live Vercel site until Supabase (#1) is connected** — then it persists with no code change. |
+| 19 | Admin can add more products, photos, adjust inventory, etc. | M–L | Watch | **Done** | Done 2026-06-22: (a) **inventory amounts** — every product now has a "Qty owned" field in admin Products; (b) **add/delete custom products** (name, category, price, qty, description, photos, availability) → show on Shop immediately; (c) **add/delete custom bundles** (name, price, compare-at, badge, what's-included lines, item picker, photos) → show on Bundles immediately. Stored in the content store (`customProducts`/`customBundles` + `quantity` override); catalog appends them everywhere. Verified e2e locally. Supabase now connected (#1 Done 2026-06-30) → admin edits **persist live** via the `site_content` row + `media` bucket. |
 | 20 | "Will it fit" — let user choose units (sq ft, inches, ft, etc.) | S | Build | **Done** | Unit toggle (ft/in/yd/m) + conversions in SpaceChecker. (2026-06-18) |
 | 21 | Some empty spaces — condense a bit | S | Build | Backlog | Spacing/layout polish across pages. |
 
@@ -44,9 +62,11 @@ that fall outside the original build (potential change-order / add-on work).
 
 ### Scope summary (Batch 1)
 
-- **Build (in fixed price):** #1, #3, #4, #7, #8, #9, #10, #11, #12, #13, #17, #18, #20, #21
-- **Watch (track effort, confirm before expanding):** #2, #6, #14, #15, #19
-- **Add-on (flag as separate scope / billing):** #5, #16
+- **Build (in fixed price):** #1 ✅, #3 ⏳content, #4 ⏳content, #7 ✅, #8 ⏳content, #9 ✅, #10 ✅, #11 ✅, #12 ✅, #13 ✅, #17 ✅, #18 ✅, #20 ✅, #21 (optional polish)
+- **Watch (track effort, confirm before expanding):** #2 ✅, #6 ✅, #14 ⏳Maps-key, #15 ✅, #19 ✅
+- **Add-on (flag as separate scope / billing):** #5 (manual done; live pull = add-on), #16 ✅
+
+_✅ = shipped & verified · ⏳ = waiting on client content/key · remaining code work: none blocking._
 
 **Backend is in scope (#1):** Supabase + Resend + Vercel domains are required to
 deploy the site with the admin portal — treated as core Build, not add-on.
