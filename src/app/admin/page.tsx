@@ -40,6 +40,7 @@ export default async function AdminPage() {
       email={session.email}
       isOwner={session.isOwner}
       admins={content.admins}
+      adminProfiles={content.adminProfiles}
       ownerEmail={process.env.ADMIN_EMAIL?.toLowerCase() ?? null}
       posts={posts}
     />

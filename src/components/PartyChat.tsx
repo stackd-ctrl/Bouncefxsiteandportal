@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 interface Msg {
@@ -127,12 +128,16 @@ export default function PartyChat() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-24 right-4 z-40 flex items-center gap-2 rounded-full bg-party-ink px-5 py-3 font-display text-base font-bold italic text-white shadow-card transition-transform hover:-translate-y-0.5 lg:bottom-6"
+          className="fixed bottom-24 right-4 z-40 flex items-center gap-2.5 rounded-full bg-party-ink py-2 pl-2 pr-5 font-display text-base font-bold italic text-white shadow-card transition-transform hover:-translate-y-0.5 lg:bottom-6"
           aria-label="Open party planner chat"
         >
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-party-yellow text-party-ink">
-            ?
-          </span>
+          <Image
+            src="/party-planner-avatar.png"
+            alt="Party Planner"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full object-cover ring-2 ring-party-yellow"
+          />
           Party Planner
         </button>
       )}
@@ -142,13 +147,22 @@ export default function PartyChat() {
         <div className="fixed bottom-24 right-4 z-50 flex h-[70vh] max-h-[560px] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-party-ink/10 lg:bottom-6">
           {/* Header */}
           <div className="flex items-center justify-between bg-party-ink px-5 py-4 text-white">
-            <div>
-              <p className="font-display text-lg font-bold italic leading-none">
-                Party Planner
-              </p>
-              <p className="mt-1 text-xs text-white/60">
-                Usually replies instantly
-              </p>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/party-planner-avatar.png"
+                alt="Party Planner"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full object-cover ring-2 ring-party-yellow"
+              />
+              <div>
+                <p className="font-display text-lg font-bold italic leading-none">
+                  Party Planner
+                </p>
+                <p className="mt-1 text-xs text-white/60">
+                  Usually replies instantly
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setOpen(false)}

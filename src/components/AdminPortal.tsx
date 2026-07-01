@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createBrowserSupabase, supabaseConfigured } from "@/lib/supabase/client";
 import type { Booking, Product, Bundle } from "@/lib/types";
-import type { SiteInfo, MediaInfo, PagesContent, Lead } from "@/lib/content";
+import type {
+  SiteInfo,
+  MediaInfo,
+  PagesContent,
+  Lead,
+  AdminProfile,
+} from "@/lib/content";
 import AdminDashboard from "./AdminDashboard";
+import DashboardHome from "./admin/DashboardHome";
 import CustomersPanel from "./admin/CustomersPanel";
 import ProductsPanel from "./admin/ProductsPanel";
 import BundlesPanel from "./admin/BundlesPanel";
@@ -17,6 +25,7 @@ import BlogPanel from "./admin/BlogPanel";
 import type { Post } from "@/lib/posts";
 
 type Tab =
+  | "dashboard"
   | "bookings"
   | "customers"
   | "products"
@@ -28,6 +37,14 @@ type Tab =
   | "team";
 
 const NAV: { key: Tab; label: string; icon: JSX.Element; desc: string }[] = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    desc: "Overview",
+    icon: (
+      <path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z" />
+    ),
+  },
   {
     key: "bookings",
     label: "Bookings",
@@ -116,6 +133,7 @@ export default function AdminPortal({
   email,
   isOwner,
   admins,
+  adminProfiles,
   ownerEmail,
   posts,
 }: {
@@ -132,10 +150,16 @@ export default function AdminPortal({
   email: string | null;
   isOwner: boolean;
   admins: string[];
+  adminProfiles: Record<string, AdminProfile>;
   ownerEmail: string | null;
   posts: Post[];
 }) {
-  const [tab, setTab] = useState<Tab>("bookings");
+  const [tab, setTab] = useState<Tab>("dashboard");
+
+  // "Hello, <name>" greeting — a saved profile name, else the email handle.
+  const myProfile = email ? adminProfiles[email.toLowerCase()] : undefined;
+  const greetingName =
+    myProfile?.displayName?.trim() || email?.split("@")[0] || "there";
   // Only the owner manages admin access.
   const nav = NAV.filter((n) => n.key !== "team" || isOwner);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -170,10 +194,15 @@ export default function AdminPortal({
     <div className="min-h-screen bg-gray-100 text-gray-800 lg:flex">
       {/* Sidebar */}
       <aside className="border-b border-gray-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
-        <div className="flex items-center gap-2 px-5 py-5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-party-red text-sm font-bold text-white">
-            FX
-          </span>
+        <div className="flex items-center gap-2.5 px-5 py-5">
+          <Image
+            src="/bounce-fx-logo.png"
+            alt="Bounce FX Party Rentals"
+            width={40}
+            height={44}
+            className="h-10 w-auto shrink-0"
+            priority
+          />
           <div className="leading-tight">
             <p className="text-sm font-bold text-gray-900">Bounce FX</p>
             <p className="text-xs text-gray-500">Admin Console</p>
@@ -257,6 +286,16 @@ export default function AdminPortal({
         </header>
 
         <div className="p-5 sm:p-8">
+          {tab === "dashboard" && (
+            <DashboardHome
+              greetingName={greetingName}
+              bookings={bookings}
+              products={products}
+              leads={leads}
+              onNavigate={(t) => setTab(t as Tab)}
+              onOpenBooking={openBooking}
+            />
+          )}
           {tab === "bookings" && (
             <AdminDashboard
               bookings={bookings}
@@ -291,7 +330,13 @@ export default function AdminPortal({
           {tab === "media" && <MediaPanel media={media} />}
           {tab === "pages" && <PagesPanel pages={pages} site={site} />}
           {tab === "articles" && <BlogPanel posts={posts} />}
-          {tab === "settings" && <SettingsPanel site={site} />}
+          {tab === "settings" && (
+            <SettingsPanel
+              site={site}
+              email={email}
+              adminProfiles={adminProfiles}
+            />
+          )}
           {tab === "team" && isOwner && (
             <TeamPanel
               initialAdmins={admins}

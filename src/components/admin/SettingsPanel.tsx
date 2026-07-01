@@ -1,12 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import type { SiteInfo } from "@/lib/content";
+import type { SiteInfo, AdminProfile } from "@/lib/content";
 
-export default function SettingsPanel({ site }: { site: SiteInfo }) {
+export default function SettingsPanel({
+  site,
+  email,
+  adminProfiles,
+}: {
+  site: SiteInfo;
+  email: string | null;
+  adminProfiles: Record<string, AdminProfile>;
+}) {
   const [draft, setDraft] = useState<SiteInfo>(site);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // ── Your profile (admin-only; never shown on the public site) ──
+  const key = (email ?? "").toLowerCase();
+  const [profile, setProfile] = useState<AdminProfile>(
+    adminProfiles[key] ?? {}
+  );
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savedProfile, setSavedProfile] = useState(false);
+
+  async function saveProfile() {
+    if (!key) return;
+    setSavingProfile(true);
+    setSavedProfile(false);
+    try {
+      const res = await fetch("/api/admin/content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Send the full merged map so we don't drop other admins' profiles.
+        body: JSON.stringify({
+          adminProfiles: { ...adminProfiles, [key]: profile },
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setSavedProfile(true);
+    } catch {
+      /* ignore */
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   function update(patch: Partial<SiteInfo>) {
     setDraft((d) => ({ ...d, ...patch }));
@@ -45,6 +83,57 @@ export default function SettingsPanel({ site }: { site: SiteInfo }) {
 
   return (
     <div className="max-w-2xl space-y-5">
+      {/* Your profile — admin-only */}
+      <div className="rounded-2xl bg-white p-6 shadow-soft">
+        <h3 className="text-base font-bold text-gray-900">Your profile</h3>
+        <p className="mt-1 text-sm text-party-ink/60">
+          Just for your admin dashboard greeting — this is{" "}
+          <span className="font-semibold">not shown anywhere on the public
+          website</span>.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="field-label">Your name</label>
+            <input
+              className="field"
+              placeholder="e.g. Chanel"
+              value={profile.displayName ?? ""}
+              onChange={(e) => {
+                setProfile((p) => ({ ...p, displayName: e.target.value }));
+                setSavedProfile(false);
+              }}
+            />
+          </div>
+          <div>
+            <label className="field-label">Role / title (optional)</label>
+            <input
+              className="field"
+              placeholder="e.g. Owner"
+              value={profile.role ?? ""}
+              onChange={(e) => {
+                setProfile((p) => ({ ...p, role: e.target.value }));
+                setSavedProfile(false);
+              }}
+            />
+          </div>
+        </div>
+        {email && (
+          <p className="mt-3 text-xs text-gray-400">Signed in as {email}</p>
+        )}
+        <div className="mt-4 flex items-center gap-4">
+          <button
+            onClick={saveProfile}
+            disabled={savingProfile || !key}
+            className="btn-red disabled:opacity-50"
+          >
+            {savingProfile ? "Saving…" : "Save profile"}
+          </button>
+          {savedProfile && (
+            <span className="font-semibold text-party-green">Saved ✓</span>
+          )}
+        </div>
+      </div>
+
       <p className="text-sm text-party-ink/60">
         Your business contact details — shown in the footer, on the contact
         page, and in search listings. To edit the words on a specific page, use

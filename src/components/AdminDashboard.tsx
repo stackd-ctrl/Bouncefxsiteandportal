@@ -218,6 +218,30 @@ export default function AdminDashboard({
     }
   }
 
+  // Bulk cleanup for clearing out test bookings before go-live.
+  async function deleteAllArchived() {
+    const ids = rows.filter((r) => r.archived).map((r) => r.id);
+    if (ids.length === 0) return;
+    if (
+      !window.confirm(
+        `Permanently delete ${ids.length} archived booking${
+          ids.length === 1 ? "" : "s"
+        }? This can't be undone.`
+      )
+    )
+      return;
+    setRows((rs) => rs.filter((r) => !r.archived));
+    await Promise.all(
+      ids.map((id) =>
+        fetch("/api/admin/booking-delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        }).catch(() => {})
+      )
+    );
+  }
+
   async function saveEdit(draft: Row) {
     setSavingEdit(true);
     const patch = {
@@ -405,6 +429,14 @@ export default function AdminDashboard({
         >
           Import CSV
         </button>
+        {statusFilter === "archived" && rows.some((r) => r.archived) && (
+          <button
+            onClick={deleteAllArchived}
+            className="rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+          >
+            Delete all archived
+          </button>
+        )}
         <input
           ref={fileRef}
           type="file"

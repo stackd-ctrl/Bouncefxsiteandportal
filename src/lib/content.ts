@@ -225,9 +225,19 @@ export interface SiteContent {
   /** Extra emails (lowercased) allowed into the admin portal, beyond the
    *  bootstrap ADMIN_EMAIL owner. Managed in the Team panel. */
   admins: string[];
+  /** Per-admin profile info (display name, etc.), keyed by lowercased email.
+   *  Used for the "Hello, <name>" greeting — NEVER shown on the public site. */
+  adminProfiles: Record<string, AdminProfile>;
   site: SiteInfo;
   media: MediaInfo;
   pages: PagesContent;
+}
+
+export interface AdminProfile {
+  /** Friendly name shown in the admin greeting. */
+  displayName?: string;
+  /** Optional role/title, admin-only. */
+  role?: string;
 }
 
 export const DEFAULT_SITE: SiteInfo = {
@@ -541,6 +551,7 @@ function hydrate(parsed: Partial<SiteContent> | null): SiteContent {
     customPosts: parsed?.customPosts ?? [],
     leads: parsed?.leads ?? [],
     admins: parsed?.admins ?? [],
+    adminProfiles: parsed?.adminProfiles ?? {},
     site: { ...DEFAULT_SITE, ...(parsed?.site ?? {}) },
     media: { ...DEFAULT_MEDIA, ...(parsed?.media ?? {}) },
     pages: hydratePages(parsed?.pages),
@@ -599,6 +610,7 @@ export async function writeContent(
     customPosts: next.customPosts ?? current.customPosts,
     leads: next.leads ?? current.leads,
     admins: next.admins ?? current.admins,
+    adminProfiles: next.adminProfiles ?? current.adminProfiles,
     site: { ...current.site, ...(next.site ?? {}) },
     media: { ...current.media, ...(next.media ?? {}) },
     pages: mergedPages as unknown as PagesContent,

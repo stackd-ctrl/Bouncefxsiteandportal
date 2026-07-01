@@ -75,6 +75,7 @@ export async function POST(req: Request) {
       customBundles: body.customBundles,
       customPosts: body.customPosts,
       leads: body.leads,
+      adminProfiles: body.adminProfiles,
       site: body.site,
       media: body.media,
       pages: body.pages,
